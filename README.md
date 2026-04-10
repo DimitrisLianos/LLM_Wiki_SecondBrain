@@ -4,8 +4,8 @@ A fully local implementation of [Karpathy's LLM Knowledge Base](https://x.com/ka
 
 Drop source documents into a folder. A local LLM reads them, extracts entities and concepts, writes interlinked wiki pages and maintains a persistent, compounding knowledge graph, all on-device, all offline.
 
-![graphall](graph_all.png)
-![graphzoom](graph_zoom.png)
+![graphall](graph_img/graph_all.png)
+![graphzoom](graph_img/graph_zoom.png)
 
 This project is a proof-of-concept that integrates four recent developments into one working system:
 
