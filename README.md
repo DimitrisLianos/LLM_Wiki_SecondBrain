@@ -11,11 +11,11 @@ This project is a proof-of-concept that integrates four recent developments into
 
 1. **[Karpathy's LLM Wiki pattern](https://x.com/karpathy/status/2039805659525644595)** (April 2026) the idea that an LLM should *build and maintain a wiki* from raw sources, rather than doing one-shot RAG retrieval. Raw data is "compiled" into interlinked Markdown, then operated on by CLI tools for Q&A, linting and incremental enrichment.
 
-2. **[Gemma 4 27B-A4B](https://ai.google.dev/gemma/docs/core/model_card_4)** (April 2026) Google DeepMind's open-weights Mixture-of-Experts model. 25.2B total parameters, but only 3.8B active per token via learned routing across 128 experts. This gives 27B-class output quality at roughly 4B-class inference cost ([model card](https://ai.google.dev/gemma/docs/core/model_card_4): MMLU Pro 82.6%, GPQA Diamond 82.3%, within 2-3% of the 31B Dense variant on all benchmarks). Apache 2.0 licensed.
+2. **[Gemma 4 27B-A4B](https://ai.google.dev/gemma/docs/core/model_card_4)** (April 2026) Google DeepMind's open-weights Mixture-of-Experts model. 25,2B total parameters, but only 3,8B active per token via learned routing across 128 experts. This gives 27B-class output quality at roughly 4B-class inference cost ([model card](https://ai.google.dev/gemma/docs/core/model_card_4): MMLU Pro 82,6%, GPQA Diamond 82,3%, within 2-3% of the 31B Dense variant on all benchmarks). Apache 2.0 licensed.
 
 3. **[Unsloth Dynamic 2.0 (UD)](https://unsloth.ai/blog/dynamic-v2)** per-layer importance-weighted quantization for GGUF files ([docs](https://unsloth.ai/docs/basics/unsloth-dynamic-2.0-ggufs)). Unlike standard Q4_K_M which applies uniform bit-width across all layers, UD selectively adjusts quantization precision per layer based on importance analysis, attention layers that matter more for output quality get higher precision, less impactful MLP layers get lower precision. Same ~16GB file size, measurably better output quality.
 
-4. **[TurboQuant KV Cache Compression](https://arxiv.org/abs/2504.19874)** (Zandieh et al., ICLR 2026) runtime KV cache compression using PolarQuant with Walsh-Hadamard rotation. We use the asymmetric `q8_0` K + `turbo4` V configuration via the [llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork (not yet in mainline llama.cpp). Full-precision keys preserve attention routing accuracy; compressed values (3.8x) reduce the KV cache from ~5GB to ~3GB, freeing ~3GB of headroom for longer context windows or additional parallel slots.
+4. **[TurboQuant KV Cache Compression](https://arxiv.org/abs/2504.19874)** (Zandieh et al., ICLR 2026) runtime KV cache compression using PolarQuant with Walsh-Hadamard rotation. We use the asymmetric `q8_0` K + `turbo4` V configuration via the [llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork (not yet in mainline llama.cpp). Full-precision keys preserve attention routing accuracy; compressed values (3,8x) reduce the KV cache from ~5GB to ~3GB, freeing ~3GB of headroom for longer context windows or additional parallel slots.
 
 Everything runs on a single MacBook. The 16GB model loads into Metal GPU unified memory, processes documents through a structured extraction pipeline and produces an [Obsidian](https://obsidian.md)-compatible knowledge base with hundreds of interlinked pages.
 
@@ -29,13 +29,13 @@ graph LR
         p["Raw sources compiled<br/>into interlinked wiki"]
     end
     subgraph MODEL ["Gemma 4 26B-A4B MoE"]
-        m["25.2B params, 3.8B active<br/>128 experts, Apache 2.0"]
+        m["25,2B params, 3,8B active<br/>128 experts, Apache 2.0"]
     end
     subgraph WEIGHTS ["Unsloth Dynamic 2.0"]
         w["Per-layer importance<br/>weighted quantization"]
     end
     subgraph KV ["TurboQuant KV Cache"]
-        k["q8_0 K + turbo4 V<br/>3.8x V compression"]
+        k["q8_0 K + turbo4 V<br/>3,8x V compression"]
     end
 
     p --> SYSTEM
@@ -199,7 +199,7 @@ The wiki schema is defined in [`CLAUDE.md`](CLAUDE.md), it specifies page format
 
 | Component        | Details                                                                                                                                                                                                                                            |
 |------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Model**        | [Gemma 4 27B-A4B](https://ai.google.dev/gemma/docs/core/model_card_4) MoE, 25.2B total / 3.8B active per token, 128 experts (8 active + 1 shared), 256K context, Apache 2.0                                                                        |
+| **Model**        | [Gemma 4 26B-A4B](https://ai.google.dev/gemma/docs/core/model_card_4) MoE, 25,2B total / 3,8B active per token, 128 experts (8 active + 1 shared), 256K context, Apache 2.0                                                                        |
 | **Quantization** | [Unsloth Dynamic 2.0 (UD)](https://unsloth.ai/blog/dynamic-v2) Q4_K_M per-layer importance-weighted quantization ([docs](https://unsloth.ai/docs/basics/unsloth-dynamic-2.0-ggufs))                                                                |
 | **Runtime**      | [llama.cpp](https://github.com/TheTom/llama-cpp-turboquant) (TurboQuant fork) with Metal GPU, flash attention, turbo4 KV cache                                                                                                                     |
 | **Retrieval**    | [SQLite FTS5](https://www.sqlite.org/fts5.html) with [BM25](https://www.sqlite.org/fts5.html#the_bm25_function) + wikilink graph traversal + [Reciprocal Rank Fusion](https://dl.acm.org/doi/10.1145/1571941.1572114) (Cormack et al., SIGIR 2009) |
@@ -304,7 +304,7 @@ All wiki pages are indexed in a [SQLite FTS5](https://www.sqlite.org/fts5.html) 
 | Type         | 3x     | Source vs. entity vs. concept affects relevance                    |
 | Body content | 1x     | Full text matches are useful but noisy                             |
 
-The [BM25 ranking function](https://www.sqlite.org/fts5.html#the_bm25_function) (built into FTS5, using k1=1.2 and b=0.75) scores documents by term frequency, inverse document frequency and document length normalization. The Porter stemmer tokenizer handles morphological variants ("quantizing" matches "quantization"). Query terms are OR-joined for broad recall.
+The [BM25 ranking function](https://www.sqlite.org/fts5.html#the_bm25_function) (built into FTS5, using k1=1,2 and b=0,75) scores documents by term frequency, inverse document frequency and document length normalization. The Porter stemmer tokenizer handles morphological variants ("quantizing" matches "quantization"). Query terms are OR-joined for broad recall.
 
 **Why FTS5 specifically?** SQLite FTS5 is compiled into Python's bundled `sqlite3` module, it requires no external dependency, no server process, no network call. For a personal wiki with hundreds to low-thousands of pages, it delivers sub-10ms query latency with BM25 ranking that the [BEIR benchmark](https://arxiv.org/abs/2104.08663) (Thakur et al., NeurIPS 2021) showed is a [strong baseline](https://arxiv.org/abs/2105.05686) (Rosa et al., 2021) that many dense retrievers fail to consistently beat in zero-shot settings. Simon Willison's [exploration of SQLite search relevance](https://simonwillison.net/2019/Jan/7/exploring-search-relevance-algorithms-sqlite/) notes FTS5 as "usually the best option" for applications requiring ranked full-text search.
 
@@ -314,7 +314,7 @@ From the top 10 FTS5 results, the system performs a 1-hop BFS expansion through 
 
 This catches pages that don't contain the query terms but are structurally related. A query about "attention mechanisms" surfaces "Flash Attention" even if that page never uses the word "mechanisms."
 
-**Why not a full knowledge graph?** [Microsoft GraphRAG](https://arxiv.org/abs/2404.16130) (Edge et al., 2024) uses LLM calls to extract entity-relation triples and build a knowledge graph with community detection. This produces excellent results for complex, multi-hop questions, but at significant indexing cost (many LLM calls per document) and system complexity. [Han et al. (2025)](https://arxiv.org/abs/2502.11371) found that community-based GraphRAG actually *underperforms* vanilla RAG on single-hop QA (13.4% lower accuracy on Natural Questions), while adding substantial overhead.
+**Why not a full knowledge graph?** [Microsoft GraphRAG](https://arxiv.org/abs/2404.16130) (Edge et al., 2024) uses LLM calls to extract entity-relation triples and build a knowledge graph with community detection. This produces excellent results for complex, multi-hop questions, but at significant indexing cost (many LLM calls per document) and system complexity. [Han et al. (2025)](https://arxiv.org/abs/2502.11371) found that community-based GraphRAG actually *underperforms* vanilla RAG on single-hop QA (13,4% lower accuracy on Natural Questions), while adding substantial overhead.
 
 Our wikilink graph is a lightweight alternative: it is not a knowledge graph constructed via entity extraction, it is a document link graph that emerges as a free byproduct of wiki generation. Links are written during ingestion anyway; the graph traversal is just reading what already exists. The approach is closer to [SubgraphRAG](https://arxiv.org/abs/2410.20724) (Li et al., ICLR 2025) in philosophy: simpler graph structures can be more effective than complex ones for many retrieval tasks.
 
@@ -478,7 +478,7 @@ Use `--save` (or `/save` in `--i` interactive mode) to write query answers as sy
 
 | Parameter        | Value                           | Purpose                                                                                   |
 |------------------|---------------------------------|-------------------------------------------------------------------------------------------|
-| `--model`        | `gemma-4-26B-A4B-it-UD-Q4_K_M.gguf` | Unsloth Dynamic (UD) Q4_K_M, ~16GB                                                    |
+| `--model`        | `gemma-4-26B-A4B-it-UD-Q4_K_M.gguf` | Unsloth Dynamic (UD) Q4_K_M, ~16GB                                                        |
 | `--host`         | `127.0.0.1`                     | Localhost only, no network exposure                                                       |
 | `--port`         | `8080`                          | HTTP API endpoint                                                                         |
 | `--ctx-size`     | `65536`                         | Total context, split across parallel slots                                                |
@@ -488,7 +488,7 @@ Use `--save` (or `/save` in `--i` interactive mode) to write query answers as sy
 | `--batch-size`   | `4096`                          | Prompt processing batch size                                                              |
 | `--flash-attn`   | `on`                            | Memory-efficient attention                                                                |
 | `--cache-type-k` | `q8_0`                          | Full-precision keys, preserves attention routing accuracy                                 |
-| `--cache-type-v` | `turbo4`                        | [TurboQuant](https://arxiv.org/abs/2504.19874) 4-bit compressed values (3.8x compression) |
+| `--cache-type-v` | `turbo4`                        | [TurboQuant](https://arxiv.org/abs/2504.19874) 4-bit compressed values (3,8x compression) |
 | `--reasoning`    | `off`                           | **Critical.** See below.                                                                  |
 
 ### Why `--reasoning off` is critical
@@ -532,27 +532,27 @@ PARALLEL=2          # still 2 parallel slots (65K each)
 
 ## Design Decisions
 
-### Why Gemma 4 27B-A4B
+### Why Gemma 4 26B-A4B
 
-Gemma 4 uses a [Mixture-of-Experts architecture](https://ai.google.dev/gemma/docs/core/model_card_4): 25.2B total parameters across 30 layers, with a learned router selecting 8 of 128 experts (plus 1 shared expert) per token, for 3.8B active parameters per forward pass. This gives the model the *knowledge capacity* of a 25B-parameter model with the *inference cost* of a ~4B-parameter model.
+Gemma 4 uses a [Mixture-of-Experts architecture](https://ai.google.dev/gemma/docs/core/model_card_4): 25,2B total parameters across 30 layers, with a learned router selecting 8 of 128 experts (plus 1 shared expert) per token, for 3,8B active parameters per forward pass. This gives the model the *knowledge capacity* of a 25B-parameter model with the *inference cost* of a ~4B-parameter model.
 
-From the [model card](https://ai.google.dev/gemma/docs/core/model_card_4), the instruction-tuned 27B-A4B achieves:
+From the [model card](https://ai.google.dev/gemma/docs/core/model_card_4), the instruction-tuned 26B-A4B achieves:
 
-| Benchmark           | Gemma 4 27B-A4B | Gemma 3 27B (prev gen) | Delta |
+| Benchmark           | Gemma 4 26B-A4B | Gemma 3 27B (no think) | Delta |
 |---------------------|-----------------|------------------------|-------|
-| MMLU Pro            | 82.6%           | 67.6%                  | +15.0 |
-| GPQA Diamond        | 82.3%           | 42.4%                  | +39.9 |
-| AIME 2026           | 88.3%           | 20.8%                  | +67.5 |
-| BigBench Extra Hard | 64.8%           | 19.3%                  | +45.5 |
-| LiveCodeBench v6    | 77.1%           | 29.1%                  | +48.0 |
+| MMLU Pro            | 82,6%           | 67,6%                  | +15,0 |
+| GPQA Diamond        | 823%            | 42,4%                  | +39,9 |
+| AIME 2026           | 88,3%           | 20,8%                  | +67,5 |
+| BigBench Extra Hard | 64,8%           | 19,3%                  | +45,5 |
+| LiveCodeBench v6    | 77,1%           | 29,1%                  | +48,0 |
 
-The 27B-A4B is within 2-3% of the 31B Dense variant (30.7B active params per token) on every benchmark, at a fraction of the compute and memory cost. For a system that needs broad knowledge and reliable structured JSON extraction, this is the best throughput-to-quality ratio in the open-weights space as of mid 2026.
+The 27B-A4B is within 2-3% of the 31B Dense variant (30,7B active params per token) on every benchmark, at a fraction of the compute and memory cost. For a system that needs broad knowledge and reliable structured JSON extraction, this is the best throughput-to-quality ratio in the open-weights space as of mid 2026.
 
 ### Why Unsloth Dynamic (UD) over standard quantization
 
 Standard GGUF quantization (Q4_K_M) applies uniform bit-width rules across all layers. [Unsloth Dynamic 2.0](https://unsloth.ai/blog/dynamic-v2) ([docs](https://unsloth.ai/docs/basics/unsloth-dynamic-2.0-ggufs)) takes a different approach: it selectively adjusts quantization precision for every layer based on importance analysis. Attention layers that matter more for output quality get higher precision, while less impactful MLP layers get lower precision. The file size is identical to standard Q4_K_M (~16GB), but output quality is measurably better because bits are allocated where they matter most. The `UD-` prefix in the GGUF model file (`gemma-4-26B-A4B-it-UD-Q4_K_M.gguf`) indicates this per-layer optimization.
 
-**KV cache quantization (TurboQuant):** Separately from weight quantization, we compress the runtime KV cache using [TurboQuant](https://arxiv.org/abs/2504.19874) (Zandieh et al., ICLR 2026) via the [llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork. We use an asymmetric configuration: `q8_0` keys (full precision, critical for attention routing via softmax) + `turbo4` values (3.8x compression). The [TurboQuant+ research](https://github.com/TheTom/turboquant_plus) found that *all quality degradation comes from K compression*, V can be compressed aggressively with negligible impact. Related work: [QJL](https://arxiv.org/abs/2406.03482) (Zandieh, Daliri, Han; 2024), [PolarQuant](https://arxiv.org/abs/2502.02617) (Han et al., AISTATS 2026).
+**KV cache quantization (TurboQuant):** Separately from weight quantization, we compress the runtime KV cache using [TurboQuant](https://arxiv.org/abs/2504.19874) (Zandieh et al., ICLR 2026) via the [llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork. We use an asymmetric configuration: `q8_0` keys (full precision, critical for attention routing via softmax) + `turbo4` values (3,8x compression). The [TurboQuant+ research](https://github.com/TheTom/turboquant_plus) found that *all quality degradation comes from K compression*, V can be compressed aggressively with negligible impact. Related work: [QJL](https://arxiv.org/abs/2406.03482) (Zandieh, Daliri, Han; 2024), [PolarQuant](https://arxiv.org/abs/2502.02617) (Han et al., AISTATS 2026).
 
 **Gemma 4 compatibility warning:** Community benchmarks show that symmetric `turbo3` causes total quality loss on Gemma 4 Q4_K_M (PPL > 100K). Only `turbo4` is validated safe. We use asymmetric `q8_0` K + `turbo4` V as the [recommended safe default](https://github.com/TheTom/turboquant_plus/blob/main/docs/turboquant-recommendations.md) for Q4_K_M models.
 
