@@ -19,8 +19,6 @@ This project is a proof-of-concept that integrates four recent developments into
 
 Everything runs on a single MacBook. The 16GB model loads into Metal GPU unified memory, processes documents through a structured extraction pipeline and produces an [Obsidian](https://obsidian.md)-compatible knowledge base with hundreds of interlinked pages.
 
-![Wiki knowledge graph in Obsidian](graph_img/graph_all.png)
-
 *The wiki after ingesting ~25 sources on local LLM inference: 500+ interlinked pages organized by topic clusters. Color groups show how the LLM cross-references entities across sources — red = TurboQuant, orange = Gemma 4, green = Karpathy, lime = agents.*
 
 ```mermaid
