@@ -1,0 +1,125 @@
+# ====================================================================
+# llm wiki — gitignore
+# ====================================================================
+# keep the repo reproducible: ship code + folder structure + docs.
+# everything else is either personal data, regeneratable state, or
+# a local tool's cache. a fresh clone should need nothing more than
+# the repo itself plus a model download to run end-to-end.
+# ====================================================================
+
+# --- operating system junk. ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- python. ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# --- editors / ides. ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# --- ai assistant caches. ---
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v[0-9]*/
+.claude/
+.cursor/
+
+# --- obsidian app state (workspace-local, not portable). ---
+obsidian_vault/.obsidian/
+obsidian_vault/**/.obsidian/
+obsidian_vault/.trash/
+obsidian_vault/.DS_Store
+obsidian_vault/**/.DS_Store
+
+# --- llama.cpp build tree. ---
+# fresh clones re-clone the fork per README (scripts/start_server.sh).
+# keeping llama.cpp/ out of the repo keeps clones lightweight and
+# avoids shipping os-specific build artifacts.
+llama.cpp/
+
+# --- model weights (multi-gb, not source-tracked). ---
+# users download these per README instructions. keeping them out
+# prevents accidental lfs pushes and respects license terms on
+# redistributable weights. directory layout preserved via .gitkeep.
+models/**
+!models/.gitkeep
+*.gguf
+
+# --- generated search index. ---
+# regenerates in <1s from wiki content via search.py --rebuild.
+# directory layout preserved via .gitkeep.
+db/**
+!db/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+
+# --- resolver state caches. ---
+# judge_cache.json / embed_cache.json / resolver_calibration.json
+# live under db/ but the pattern above already covers them. leaving
+# the comment here so a reader knows what lives under db/.
+
+# --- raw source documents (personal data). ---
+# these are the user's ingest inputs (pdfs, .md notes, etc). they
+# belong to the user, not the repo. the directory structure is
+# preserved via a .gitkeep marker.
+obsidian_vault/raw/**
+!obsidian_vault/raw/.gitkeep
+!obsidian_vault/raw/assets/
+obsidian_vault/raw/assets/**
+!obsidian_vault/raw/assets/.gitkeep
+
+# --- generated wiki pages (personal data). ---
+# entities/, concepts/, sources/, synthesis/ are llm-generated from
+# raw/ on every ingest. like raw/, they are user data; the folder
+# layout is preserved via .gitkeep markers.
+obsidian_vault/wiki/sources/**
+!obsidian_vault/wiki/sources/.gitkeep
+obsidian_vault/wiki/entities/**
+!obsidian_vault/wiki/entities/.gitkeep
+obsidian_vault/wiki/concepts/**
+!obsidian_vault/wiki/concepts/.gitkeep
+obsidian_vault/wiki/synthesis/**
+!obsidian_vault/wiki/synthesis/.gitkeep
+
+# --- transient runtime / logs. ---
+*.log
+llama.cpp.log
+scripts/*.log
+scripts/.server.pid
+nohup.out
+
+# --- temp / backup files. ---
+*.bak
+*.tmp
+*.orig
+*.rej

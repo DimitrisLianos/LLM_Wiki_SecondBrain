@@ -1,0 +1,1200 @@
+{
+  "version": 1,
+  "updated": "2026-04-12",
+  "source": "curated from wikidata canonical labels + wikipedia redirects",
+  "notes": "seed tier of the canonical alias registry. high-value proper nouns that must never fork across sources. extend this file for additional coverage; the runtime tier (db/alias_registry.json) is auto-populated and should not be edited by hand.",
+  "entries": {
+    "openai": {
+      "canonical_name": "OpenAI",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "lab", "tool", "business"],
+      "description": "American artificial intelligence research organization founded in 2015, creator of the GPT family of language models and ChatGPT.",
+      "aliases": ["open ai", "openai inc", "openai llc"],
+      "subdir": "entities"
+    },
+    "anthropic": {
+      "canonical_name": "Anthropic",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "lab", "business"],
+      "description": "American AI safety company founded in 2021 by former OpenAI researchers, creator of the Claude family of large language models.",
+      "aliases": ["anthropic pbc", "anthropic inc"],
+      "subdir": "entities"
+    },
+    "google": {
+      "canonical_name": "Google",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business", "tool"],
+      "description": "American multinational technology company specializing in internet-related services, AI research, and consumer products.",
+      "aliases": ["google inc", "google llc", "alphabet"],
+      "subdir": "entities"
+    },
+    "google deepmind": {
+      "canonical_name": "Google DeepMind",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "lab", "company"],
+      "description": "British-American AI research laboratory owned by Google, created by merging DeepMind and Google Brain in 2023.",
+      "aliases": ["deepmind", "google brain", "deepmind technologies"],
+      "subdir": "entities"
+    },
+    "meta": {
+      "canonical_name": "Meta",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational technology conglomerate, parent company of Facebook, Instagram, WhatsApp, and AI research group Meta AI (FAIR).",
+      "aliases": ["facebook", "meta platforms", "fb"],
+      "subdir": "entities"
+    },
+    "meta ai": {
+      "canonical_name": "Meta AI",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "lab", "tool", "product"],
+      "description": "Meta Platforms' AI research division, formerly Facebook AI Research (FAIR).",
+      "aliases": ["fair", "facebook ai research", "facebook ai"],
+      "subdir": "entities"
+    },
+    "microsoft": {
+      "canonical_name": "Microsoft",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational technology corporation headquartered in Redmond, Washington.",
+      "aliases": ["microsoft corp", "msft"],
+      "subdir": "entities"
+    },
+    "microsoft research": {
+      "canonical_name": "Microsoft Research",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "lab"],
+      "description": "Microsoft's research division focused on computer science, software engineering, and AI.",
+      "aliases": ["msr"],
+      "subdir": "entities"
+    },
+    "apple": {
+      "canonical_name": "Apple",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational technology company headquartered in Cupertino, California.",
+      "aliases": ["apple inc", "aapl"],
+      "subdir": "entities"
+    },
+    "amazon": {
+      "canonical_name": "Amazon",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational technology company focusing on e-commerce, cloud computing, and AI.",
+      "aliases": ["amazon com", "amzn"],
+      "subdir": "entities"
+    },
+    "nvidia": {
+      "canonical_name": "Nvidia",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational corporation that designs graphics processing units and AI accelerators.",
+      "aliases": ["nvidia corp", "nvda"],
+      "subdir": "entities"
+    },
+    "ibm": {
+      "canonical_name": "IBM",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational technology corporation, one of the oldest computing companies.",
+      "aliases": ["international business machines", "ibm corp"],
+      "subdir": "entities"
+    },
+    "intel": {
+      "canonical_name": "Intel",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational corporation that designs and manufactures microprocessors.",
+      "aliases": ["intel corp", "intc"],
+      "subdir": "entities"
+    },
+    "amd": {
+      "canonical_name": "AMD",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American multinational semiconductor company producing CPUs and GPUs.",
+      "aliases": ["advanced micro devices"],
+      "subdir": "entities"
+    },
+    "tesla": {
+      "canonical_name": "Tesla",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American electric vehicle and clean energy company led by Elon Musk.",
+      "aliases": ["tesla inc", "tesla motors", "tsla"],
+      "subdir": "entities"
+    },
+    "xai": {
+      "canonical_name": "xAI",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "lab"],
+      "description": "American AI startup founded by Elon Musk in 2023, creator of the Grok family of large language models.",
+      "aliases": ["x ai", "x.ai"],
+      "subdir": "entities"
+    },
+    "mistral ai": {
+      "canonical_name": "Mistral AI",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "lab"],
+      "description": "French AI startup founded in 2023 that develops open-weight large language models.",
+      "aliases": ["mistral"],
+      "subdir": "entities"
+    },
+    "cohere": {
+      "canonical_name": "Cohere",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "lab"],
+      "description": "Canadian multinational technology company focused on enterprise AI and large language models.",
+      "aliases": ["cohere ai"],
+      "subdir": "entities"
+    },
+    "hugging face": {
+      "canonical_name": "Hugging Face",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "tool", "platform"],
+      "description": "American-French company providing an open-source platform and hub for machine learning models, datasets, and libraries.",
+      "aliases": ["huggingface", "hf"],
+      "subdir": "entities"
+    },
+    "stability ai": {
+      "canonical_name": "Stability AI",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company"],
+      "description": "AI company best known for releasing the open-weight Stable Diffusion image generation model.",
+      "aliases": ["stability"],
+      "subdir": "entities"
+    },
+    "runway": {
+      "canonical_name": "Runway",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "tool"],
+      "description": "AI research company focused on generative video and creative tools.",
+      "aliases": ["runwayml", "runway ml"],
+      "subdir": "entities"
+    },
+    "perplexity": {
+      "canonical_name": "Perplexity",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "tool", "product"],
+      "description": "AI-powered answer engine and conversational search company founded in 2022.",
+      "aliases": ["perplexity ai"],
+      "subdir": "entities"
+    },
+    "palantir": {
+      "canonical_name": "Palantir",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "business"],
+      "description": "American public software company that builds data analytics platforms for government and enterprise.",
+      "aliases": ["palantir technologies", "pltr"],
+      "subdir": "entities"
+    },
+    "chatgpt": {
+      "canonical_name": "ChatGPT",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product", "chatbot", "system", "llm"],
+      "description": "OpenAI's conversational AI product powered by the GPT family of large language models, launched in November 2022.",
+      "aliases": ["chat gpt", "chatgpt model", "gpt chat"],
+      "subdir": "entities"
+    },
+    "gpt-4": {
+      "canonical_name": "GPT-4",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "OpenAI's multimodal large language model released in March 2023, successor to GPT-3.5.",
+      "aliases": ["gpt 4", "gpt4"],
+      "subdir": "entities"
+    },
+    "gpt-4o": {
+      "canonical_name": "GPT-4o",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "OpenAI's flagship multimodal model released in 2024, designed for text, image, and audio.",
+      "aliases": ["gpt 4o", "gpt4o", "gpt-4 omni"],
+      "subdir": "entities"
+    },
+    "gpt-3": {
+      "canonical_name": "GPT-3",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "OpenAI's 175-billion-parameter autoregressive language model released in 2020.",
+      "aliases": ["gpt 3", "gpt3"],
+      "subdir": "entities"
+    },
+    "gpt-3 5": {
+      "canonical_name": "GPT-3.5",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "OpenAI's interim LLM family between GPT-3 and GPT-4, powering the initial release of ChatGPT.",
+      "aliases": ["gpt 3.5", "gpt3.5"],
+      "subdir": "entities"
+    },
+    "claude": {
+      "canonical_name": "Claude",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product", "chatbot", "system", "llm"],
+      "description": "Anthropic's family of large language models and associated conversational AI assistant, first released in 2023.",
+      "aliases": ["claude ai", "claude model", "anthropic claude"],
+      "subdir": "entities"
+    },
+    "claude 3": {
+      "canonical_name": "Claude 3",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Anthropic's third generation of the Claude language model family, released in March 2024.",
+      "aliases": ["claude 3 opus", "claude-3"],
+      "subdir": "entities"
+    },
+    "claude 3 5 sonnet": {
+      "canonical_name": "Claude 3.5 Sonnet",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Anthropic's Claude 3.5 Sonnet large language model, released in June 2024.",
+      "aliases": ["claude-3.5-sonnet", "sonnet 3.5"],
+      "subdir": "entities"
+    },
+    "claude sonnet 4 6": {
+      "canonical_name": "Claude Sonnet 4.6",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Anthropic's Claude Sonnet 4.6 large language model.",
+      "aliases": ["anthropic sonnet 4.6", "claude-sonnet-4.6"],
+      "subdir": "entities"
+    },
+    "gemini": {
+      "canonical_name": "Gemini",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product", "chatbot", "llm"],
+      "description": "Google DeepMind's family of multimodal large language models, successor to PaLM, launched in December 2023.",
+      "aliases": ["google gemini", "gemini ai", "bard"],
+      "subdir": "entities"
+    },
+    "llama": {
+      "canonical_name": "Llama",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Meta's open-weight family of large language models, first released in February 2023.",
+      "aliases": ["meta llama", "llama2", "llama 2", "llama3", "llama 3", "llama-2", "llama-3"],
+      "subdir": "entities"
+    },
+    "mistral": {
+      "canonical_name": "Mistral",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Open-weight large language model family developed by Mistral AI.",
+      "aliases": ["mistral 7b", "mixtral", "mistral large"],
+      "subdir": "entities"
+    },
+    "grok": {
+      "canonical_name": "Grok",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product", "chatbot", "llm"],
+      "description": "xAI's large language model and conversational AI product integrated with X (formerly Twitter).",
+      "aliases": ["xai grok", "grok ai"],
+      "subdir": "entities"
+    },
+    "gemma": {
+      "canonical_name": "Gemma",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "llm"],
+      "description": "Google's family of open-weight lightweight language models derived from Gemini research.",
+      "aliases": ["google gemma", "gemma 2", "gemma 3", "gemma 4"],
+      "subdir": "entities"
+    },
+    "bert": {
+      "canonical_name": "BERT",
+      "canonical_type": "model",
+      "compatible_types": ["model", "architecture", "tool"],
+      "description": "Bidirectional Encoder Representations from Transformers, a transformer-based language model released by Google in 2018.",
+      "aliases": ["google bert"],
+      "subdir": "entities"
+    },
+    "t5": {
+      "canonical_name": "T5",
+      "canonical_type": "model",
+      "compatible_types": ["model", "architecture", "tool"],
+      "description": "Google's Text-to-Text Transfer Transformer, a unified text-to-text encoder-decoder model.",
+      "aliases": ["text-to-text transfer transformer", "google t5"],
+      "subdir": "entities"
+    },
+    "bge-m3": {
+      "canonical_name": "BGE-M3",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool"],
+      "description": "Multilingual, multi-functionality, multi-granularity text embedding model from BAAI described by Chen et al. (2024).",
+      "aliases": ["bge m3", "bgem3", "bge-m3 embeddings"],
+      "subdir": "entities"
+    },
+    "stable diffusion": {
+      "canonical_name": "Stable Diffusion",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product"],
+      "description": "Open-weight latent diffusion text-to-image generation model originally released by Stability AI in 2022.",
+      "aliases": ["sd", "stablediffusion"],
+      "subdir": "entities"
+    },
+    "dall-e": {
+      "canonical_name": "DALL-E",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product"],
+      "description": "OpenAI's text-to-image generation model family.",
+      "aliases": ["dall e", "dalle", "dall-e 2", "dall-e 3"],
+      "subdir": "entities"
+    },
+    "midjourney": {
+      "canonical_name": "Midjourney",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product", "organization"],
+      "description": "Independent research lab producing a generative AI image creation service of the same name.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "sora": {
+      "canonical_name": "Sora",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool", "product"],
+      "description": "OpenAI's text-to-video generative model announced in February 2024.",
+      "aliases": ["openai sora"],
+      "subdir": "entities"
+    },
+    "whisper": {
+      "canonical_name": "Whisper",
+      "canonical_type": "model",
+      "compatible_types": ["model", "tool"],
+      "description": "OpenAI's open-source automatic speech recognition model released in September 2022.",
+      "aliases": ["openai whisper"],
+      "subdir": "entities"
+    },
+    "pytorch": {
+      "canonical_name": "PyTorch",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "Open-source deep learning framework originally developed by Meta AI and now governed by the PyTorch Foundation.",
+      "aliases": ["torch", "py torch"],
+      "subdir": "entities"
+    },
+    "tensorflow": {
+      "canonical_name": "TensorFlow",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "Open-source machine learning framework developed by Google Brain.",
+      "aliases": ["tf", "google tensorflow"],
+      "subdir": "entities"
+    },
+    "jax": {
+      "canonical_name": "JAX",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "Google's numerical computing library with composable function transformations (grad, jit, vmap).",
+      "aliases": ["google jax"],
+      "subdir": "entities"
+    },
+    "keras": {
+      "canonical_name": "Keras",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "High-level neural networks API, integrated into TensorFlow and running on multiple backends.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "scikit-learn": {
+      "canonical_name": "scikit-learn",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library"],
+      "description": "Open-source Python machine learning library built on NumPy, SciPy, and matplotlib.",
+      "aliases": ["scikit learn", "sklearn"],
+      "subdir": "entities"
+    },
+    "numpy": {
+      "canonical_name": "NumPy",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library"],
+      "description": "Fundamental package for scientific computing in Python providing N-dimensional arrays.",
+      "aliases": ["num py"],
+      "subdir": "entities"
+    },
+    "pandas": {
+      "canonical_name": "pandas",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library"],
+      "description": "Open-source Python library providing data structures and data analysis tools.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "transformers": {
+      "canonical_name": "Transformers",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library"],
+      "description": "Hugging Face's Python library providing pretrained transformer models for NLP, vision, and audio tasks.",
+      "aliases": ["huggingface transformers", "hf transformers"],
+      "subdir": "entities"
+    },
+    "llama cpp": {
+      "canonical_name": "llama.cpp",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library", "runtime"],
+      "description": "Open-source C/C++ inference runtime for LLaMA-family language models with GGUF quantization support.",
+      "aliases": ["llamacpp", "llama-cpp"],
+      "subdir": "entities"
+    },
+    "ollama": {
+      "canonical_name": "Ollama",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "runtime"],
+      "description": "Open-source tool for running large language models locally with a simple command-line interface.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "vllm": {
+      "canonical_name": "vLLM",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "library", "runtime"],
+      "description": "High-throughput and memory-efficient inference engine for large language models using PagedAttention.",
+      "aliases": ["v llm"],
+      "subdir": "entities"
+    },
+    "langchain": {
+      "canonical_name": "LangChain",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "Open-source framework for building applications powered by large language models.",
+      "aliases": ["lang chain"],
+      "subdir": "entities"
+    },
+    "llamaindex": {
+      "canonical_name": "LlamaIndex",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "library"],
+      "description": "Data framework for connecting custom data sources to large language models, originally called GPT Index.",
+      "aliases": ["llama index", "gpt index"],
+      "subdir": "entities"
+    },
+    "github": {
+      "canonical_name": "GitHub",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "organization"],
+      "description": "Microsoft-owned web-based hosting service for version control and collaborative software development using Git.",
+      "aliases": ["git hub"],
+      "subdir": "entities"
+    },
+    "git": {
+      "canonical_name": "Git",
+      "canonical_type": "tool",
+      "compatible_types": ["tool"],
+      "description": "Distributed version control system created by Linus Torvalds in 2005.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "docker": {
+      "canonical_name": "Docker",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Platform-as-a-service product for delivering software in lightweight containers.",
+      "aliases": ["docker inc"],
+      "subdir": "entities"
+    },
+    "kubernetes": {
+      "canonical_name": "Kubernetes",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Open-source container orchestration system originally designed by Google.",
+      "aliases": ["k8s", "kube"],
+      "subdir": "entities"
+    },
+    "linux": {
+      "canonical_name": "Linux",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Family of open-source Unix-like operating systems based on the Linux kernel.",
+      "aliases": ["gnu linux", "gnu/linux"],
+      "subdir": "entities"
+    },
+    "macos": {
+      "canonical_name": "macOS",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Apple's operating system for Mac computers, derived from NeXTSTEP and Unix.",
+      "aliases": ["mac os", "osx", "os x"],
+      "subdir": "entities"
+    },
+    "windows": {
+      "canonical_name": "Windows",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Microsoft's family of graphical operating systems for personal computers.",
+      "aliases": ["microsoft windows", "ms windows"],
+      "subdir": "entities"
+    },
+    "python": {
+      "canonical_name": "Python",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "High-level general-purpose programming language created by Guido van Rossum, widely used in machine learning and data science.",
+      "aliases": ["python language", "python3", "cpython"],
+      "subdir": "entities"
+    },
+    "rust": {
+      "canonical_name": "Rust",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "Systems programming language focused on memory safety, concurrency, and performance.",
+      "aliases": ["rust lang", "rust-lang"],
+      "subdir": "entities"
+    },
+    "typescript": {
+      "canonical_name": "TypeScript",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "Microsoft-developed strongly typed superset of JavaScript that compiles to plain JavaScript.",
+      "aliases": ["ts", "type script"],
+      "subdir": "entities"
+    },
+    "javascript": {
+      "canonical_name": "JavaScript",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "High-level interpreted programming language that forms the core of web development alongside HTML and CSS.",
+      "aliases": ["js", "ecmascript"],
+      "subdir": "entities"
+    },
+    "go": {
+      "canonical_name": "Go",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "Statically typed compiled programming language designed at Google by Robert Griesemer, Rob Pike, and Ken Thompson.",
+      "aliases": ["golang", "go lang"],
+      "subdir": "entities"
+    },
+    "java": {
+      "canonical_name": "Java",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "Class-based, object-oriented programming language originally developed by Sun Microsystems.",
+      "aliases": ["java language"],
+      "subdir": "entities"
+    },
+    "c++": {
+      "canonical_name": "C++",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "General-purpose programming language created by Bjarne Stroustrup as an extension of C.",
+      "aliases": ["cpp", "c plus plus"],
+      "subdir": "entities"
+    },
+    "swift": {
+      "canonical_name": "Swift",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "General-purpose multi-paradigm compiled programming language developed by Apple.",
+      "aliases": ["swift lang", "apple swift"],
+      "subdir": "entities"
+    },
+    "kotlin": {
+      "canonical_name": "Kotlin",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "language"],
+      "description": "Statically typed programming language developed by JetBrains, officially supported for Android development.",
+      "aliases": ["kotlin lang"],
+      "subdir": "entities"
+    },
+    "sqlite": {
+      "canonical_name": "SQLite",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database", "library"],
+      "description": "Self-contained, serverless, zero-configuration, transactional SQL database engine.",
+      "aliases": ["sqlite3", "sql lite"],
+      "subdir": "entities"
+    },
+    "postgresql": {
+      "canonical_name": "PostgreSQL",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database"],
+      "description": "Free and open-source object-relational database management system.",
+      "aliases": ["postgres", "psql"],
+      "subdir": "entities"
+    },
+    "mysql": {
+      "canonical_name": "MySQL",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database"],
+      "description": "Open-source relational database management system owned by Oracle.",
+      "aliases": ["my sql"],
+      "subdir": "entities"
+    },
+    "mongodb": {
+      "canonical_name": "MongoDB",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database"],
+      "description": "Open-source document-oriented NoSQL database program.",
+      "aliases": ["mongo db", "mongo"],
+      "subdir": "entities"
+    },
+    "redis": {
+      "canonical_name": "Redis",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database"],
+      "description": "In-memory data structure store used as a database, cache, and message broker.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "elasticsearch": {
+      "canonical_name": "Elasticsearch",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "database"],
+      "description": "Distributed, RESTful search and analytics engine built on Apache Lucene.",
+      "aliases": ["elastic search", "elastic"],
+      "subdir": "entities"
+    },
+    "aws": {
+      "canonical_name": "Amazon Web Services",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "platform", "tool", "company"],
+      "description": "Amazon's comprehensive cloud computing platform, the largest public cloud provider.",
+      "aliases": ["aws", "amazon cloud"],
+      "subdir": "entities"
+    },
+    "azure": {
+      "canonical_name": "Microsoft Azure",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "platform", "tool", "company"],
+      "description": "Microsoft's cloud computing platform providing infrastructure, platform, and software services.",
+      "aliases": ["azure", "ms azure"],
+      "subdir": "entities"
+    },
+    "gcp": {
+      "canonical_name": "Google Cloud Platform",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "platform", "tool", "company"],
+      "description": "Google's cloud computing services suite including compute, storage, databases, and ML tools.",
+      "aliases": ["gcp", "google cloud"],
+      "subdir": "entities"
+    },
+    "coreweave": {
+      "canonical_name": "CoreWeave",
+      "canonical_type": "organization",
+      "compatible_types": ["organization", "company", "platform"],
+      "description": "Specialized cloud provider focused on GPU compute for AI and machine learning workloads.",
+      "aliases": ["core weave"],
+      "subdir": "entities"
+    },
+    "wikipedia": {
+      "canonical_name": "Wikipedia",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "dataset"],
+      "description": "Free multilingual online encyclopedia written and maintained by a community of volunteer editors.",
+      "aliases": ["wiki pedia"],
+      "subdir": "entities"
+    },
+    "wikidata": {
+      "canonical_name": "Wikidata",
+      "canonical_type": "dataset",
+      "compatible_types": ["tool", "platform", "dataset"],
+      "description": "Free collaborative multilingual knowledge graph hosted by the Wikimedia Foundation.",
+      "aliases": ["wiki data"],
+      "subdir": "entities"
+    },
+    "arxiv": {
+      "canonical_name": "arXiv",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Open-access preprint repository for scientific papers in physics, mathematics, computer science, and related fields.",
+      "aliases": ["ar xiv", "arxiv org"],
+      "subdir": "entities"
+    },
+    "reddit": {
+      "canonical_name": "Reddit",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "organization"],
+      "description": "American social news aggregation, content rating, and discussion platform.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "twitter": {
+      "canonical_name": "X",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "organization"],
+      "description": "Social networking service previously known as Twitter, rebranded to X in 2023.",
+      "aliases": ["twitter", "x twitter", "x.com"],
+      "subdir": "entities"
+    },
+    "youtube": {
+      "canonical_name": "YouTube",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Google-owned online video sharing and social media platform.",
+      "aliases": ["you tube"],
+      "subdir": "entities"
+    },
+    "facebook": {
+      "canonical_name": "Facebook",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Online social media and social networking service owned by Meta.",
+      "aliases": ["fb"],
+      "subdir": "entities"
+    },
+    "instagram": {
+      "canonical_name": "Instagram",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Photo and video sharing social networking service owned by Meta.",
+      "aliases": ["ig", "insta"],
+      "subdir": "entities"
+    },
+    "whatsapp": {
+      "canonical_name": "WhatsApp",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Cross-platform centralized instant messaging and voice-over-IP service owned by Meta.",
+      "aliases": ["whats app"],
+      "subdir": "entities"
+    },
+    "discord": {
+      "canonical_name": "Discord",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "organization"],
+      "description": "Voice, video and text communication service used by over a hundred million users.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "slack": {
+      "canonical_name": "Slack",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform"],
+      "description": "Enterprise messaging and collaboration platform owned by Salesforce.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "notion": {
+      "canonical_name": "Notion",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "platform", "product"],
+      "description": "Productivity and note-taking application combining documents, wikis, and project management.",
+      "aliases": [],
+      "subdir": "entities"
+    },
+    "obsidian": {
+      "canonical_name": "Obsidian",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "product"],
+      "description": "Personal knowledge base and note-taking application operating on local Markdown files with bidirectional linking.",
+      "aliases": ["obsidian md", "obsidian.md"],
+      "subdir": "entities"
+    },
+    "vscode": {
+      "canonical_name": "Visual Studio Code",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "product"],
+      "description": "Microsoft's free, open-source code editor built on Electron and TypeScript.",
+      "aliases": ["vscode", "vs code", "code"],
+      "subdir": "entities"
+    },
+    "cursor": {
+      "canonical_name": "Cursor",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "product"],
+      "description": "AI-first code editor forked from Visual Studio Code.",
+      "aliases": ["cursor editor", "cursor ai"],
+      "subdir": "entities"
+    },
+    "copilot": {
+      "canonical_name": "GitHub Copilot",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "product"],
+      "description": "AI-powered code completion tool developed by GitHub and OpenAI, released in 2021.",
+      "aliases": ["github copilot", "copilot"],
+      "subdir": "entities"
+    },
+    "claude code": {
+      "canonical_name": "Claude Code",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "product"],
+      "description": "Anthropic's agentic command-line coding tool powered by the Claude language model family.",
+      "aliases": ["anthropic claude code"],
+      "subdir": "entities"
+    },
+    "imagenet": {
+      "canonical_name": "ImageNet",
+      "canonical_type": "dataset",
+      "compatible_types": ["dataset", "benchmark"],
+      "description": "Large visual database designed for use in visual object recognition research, organized according to the WordNet hierarchy.",
+      "aliases": ["image net"],
+      "subdir": "entities"
+    },
+    "coco": {
+      "canonical_name": "COCO",
+      "canonical_type": "dataset",
+      "compatible_types": ["dataset", "benchmark"],
+      "description": "Microsoft Common Objects in Context, a large-scale object detection, segmentation, and captioning dataset.",
+      "aliases": ["ms coco", "common objects in context"],
+      "subdir": "entities"
+    },
+    "mmlu": {
+      "canonical_name": "MMLU",
+      "canonical_type": "benchmark",
+      "compatible_types": ["benchmark", "dataset"],
+      "description": "Massive Multitask Language Understanding benchmark measuring LLM accuracy across 57 subjects.",
+      "aliases": ["massive multitask language understanding"],
+      "subdir": "entities"
+    },
+    "glue": {
+      "canonical_name": "GLUE",
+      "canonical_type": "benchmark",
+      "compatible_types": ["benchmark", "dataset"],
+      "description": "General Language Understanding Evaluation, a collection of natural language understanding tasks.",
+      "aliases": ["general language understanding evaluation"],
+      "subdir": "entities"
+    },
+    "squad": {
+      "canonical_name": "SQuAD",
+      "canonical_type": "benchmark",
+      "compatible_types": ["benchmark", "dataset"],
+      "description": "Stanford Question Answering Dataset, a reading comprehension benchmark.",
+      "aliases": ["stanford question answering dataset"],
+      "subdir": "entities"
+    },
+    "humaneval": {
+      "canonical_name": "HumanEval",
+      "canonical_type": "benchmark",
+      "compatible_types": ["benchmark", "dataset"],
+      "description": "OpenAI's benchmark for evaluating code generation models on hand-written Python programming problems.",
+      "aliases": ["human eval"],
+      "subdir": "entities"
+    },
+    "wikitext": {
+      "canonical_name": "WikiText",
+      "canonical_type": "dataset",
+      "compatible_types": ["dataset", "benchmark"],
+      "description": "Language modeling dataset of tokens extracted from verified Good and Featured Wikipedia articles.",
+      "aliases": ["wiki text"],
+      "subdir": "entities"
+    },
+    "common crawl": {
+      "canonical_name": "Common Crawl",
+      "canonical_type": "dataset",
+      "compatible_types": ["dataset", "organization"],
+      "description": "Nonprofit organization that crawls the web and freely provides petabytes of data to the public.",
+      "aliases": ["commoncrawl"],
+      "subdir": "entities"
+    },
+    "the pile": {
+      "canonical_name": "The Pile",
+      "canonical_type": "dataset",
+      "compatible_types": ["dataset"],
+      "description": "825 GiB diverse, open-source language modeling dataset constructed by EleutherAI.",
+      "aliases": ["pile dataset", "eleutherai pile"],
+      "subdir": "entities"
+    },
+    "acl": {
+      "canonical_name": "ACL",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Association for Computational Linguistics, the premier international scientific and professional society for computational linguistics.",
+      "aliases": ["association for computational linguistics"],
+      "subdir": "entities"
+    },
+    "emnlp": {
+      "canonical_name": "EMNLP",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Conference on Empirical Methods in Natural Language Processing, a leading NLP venue.",
+      "aliases": ["empirical methods in natural language processing"],
+      "subdir": "entities"
+    },
+    "neurips": {
+      "canonical_name": "NeurIPS",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Conference on Neural Information Processing Systems, a premier machine learning and computational neuroscience venue.",
+      "aliases": ["nips", "neural information processing systems"],
+      "subdir": "entities"
+    },
+    "icml": {
+      "canonical_name": "ICML",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "International Conference on Machine Learning, one of the top machine learning conferences.",
+      "aliases": ["international conference on machine learning"],
+      "subdir": "entities"
+    },
+    "iclr": {
+      "canonical_name": "ICLR",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "International Conference on Learning Representations, a top venue for deep learning research.",
+      "aliases": ["international conference on learning representations"],
+      "subdir": "entities"
+    },
+    "cvpr": {
+      "canonical_name": "CVPR",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "IEEE/CVF Conference on Computer Vision and Pattern Recognition, the premier annual computer vision venue.",
+      "aliases": ["computer vision and pattern recognition"],
+      "subdir": "entities"
+    },
+    "ieee": {
+      "canonical_name": "IEEE",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Institute of Electrical and Electronics Engineers, the world's largest technical professional organization.",
+      "aliases": ["institute of electrical and electronics engineers"],
+      "subdir": "entities"
+    },
+    "acm": {
+      "canonical_name": "ACM",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Association for Computing Machinery, a US-based international learned society for computing.",
+      "aliases": ["association for computing machinery"],
+      "subdir": "entities"
+    },
+    "mit": {
+      "canonical_name": "MIT",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Massachusetts Institute of Technology, a private research university in Cambridge, Massachusetts.",
+      "aliases": ["massachusetts institute of technology"],
+      "subdir": "entities"
+    },
+    "stanford": {
+      "canonical_name": "Stanford University",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Private research university in Stanford, California, one of the top computer science institutions.",
+      "aliases": ["stanford"],
+      "subdir": "entities"
+    },
+    "berkeley": {
+      "canonical_name": "UC Berkeley",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "University of California, Berkeley, a public land-grant research university in Berkeley, California.",
+      "aliases": ["uc berkeley", "berkeley", "university of california berkeley"],
+      "subdir": "entities"
+    },
+    "cmu": {
+      "canonical_name": "Carnegie Mellon University",
+      "canonical_type": "organization",
+      "compatible_types": ["organization"],
+      "description": "Private research university in Pittsburgh, Pennsylvania, prominent in computer science and AI.",
+      "aliases": ["cmu", "carnegie mellon"],
+      "subdir": "entities"
+    },
+    "transformer": {
+      "canonical_name": "Transformer",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method", "framework"],
+      "description": "Deep learning architecture based on self-attention mechanisms introduced in the 2017 paper 'Attention Is All You Need' by Vaswani et al.",
+      "aliases": ["transformer architecture", "transformer network", "transformer model"],
+      "subdir": "concepts"
+    },
+    "attention mechanism": {
+      "canonical_name": "Attention Mechanism",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique", "architecture"],
+      "description": "Neural network technique that enables models to dynamically focus on relevant portions of the input sequence.",
+      "aliases": ["attention", "self-attention", "self attention", "attention layer"],
+      "subdir": "concepts"
+    },
+    "backpropagation": {
+      "canonical_name": "Backpropagation",
+      "canonical_type": "algorithm",
+      "compatible_types": ["algorithm", "method", "technique"],
+      "description": "Gradient-based optimization algorithm for training neural networks by propagating errors backwards through the network.",
+      "aliases": ["backprop", "back propagation"],
+      "subdir": "concepts"
+    },
+    "reinforcement learning": {
+      "canonical_name": "Reinforcement Learning",
+      "canonical_type": "method",
+      "compatible_types": ["method", "framework", "technique"],
+      "description": "Machine learning paradigm where an agent learns to make decisions by interacting with an environment and receiving rewards.",
+      "aliases": ["rl"],
+      "subdir": "concepts"
+    },
+    "rlhf": {
+      "canonical_name": "RLHF",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique", "framework"],
+      "description": "Reinforcement Learning from Human Feedback, a technique for aligning language models with human preferences.",
+      "aliases": ["reinforcement learning from human feedback"],
+      "subdir": "concepts"
+    },
+    "rag": {
+      "canonical_name": "RAG",
+      "canonical_type": "method",
+      "compatible_types": ["method", "framework", "technique", "architecture"],
+      "description": "Retrieval-Augmented Generation, a technique combining retrieval from a knowledge base with generative language modeling.",
+      "aliases": ["retrieval augmented generation", "retrieval-augmented generation"],
+      "subdir": "concepts"
+    },
+    "chain-of-thought": {
+      "canonical_name": "Chain-of-Thought",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique"],
+      "description": "Prompting technique where language models are encouraged to reason step by step before producing a final answer.",
+      "aliases": ["chain of thought", "cot", "chain-of-thought prompting"],
+      "subdir": "concepts"
+    },
+    "fine-tuning": {
+      "canonical_name": "Fine-tuning",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique"],
+      "description": "Adapting a pretrained model to a downstream task by continuing training on task-specific data.",
+      "aliases": ["fine tuning", "finetuning"],
+      "subdir": "concepts"
+    },
+    "lora": {
+      "canonical_name": "LoRA",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique", "framework"],
+      "description": "Low-Rank Adaptation, a parameter-efficient fine-tuning method that injects trainable low-rank matrices into pretrained model weights.",
+      "aliases": ["low-rank adaptation", "low rank adaptation"],
+      "subdir": "concepts"
+    },
+    "bm25": {
+      "canonical_name": "BM25",
+      "canonical_type": "algorithm",
+      "compatible_types": ["algorithm", "method", "metric"],
+      "description": "Probabilistic information retrieval ranking function for estimating document relevance to a query.",
+      "aliases": ["okapi bm25", "bm 25"],
+      "subdir": "concepts"
+    },
+    "tf-idf": {
+      "canonical_name": "TF-IDF",
+      "canonical_type": "algorithm",
+      "compatible_types": ["algorithm", "method", "metric"],
+      "description": "Term Frequency-Inverse Document Frequency, a numerical statistic reflecting word importance in a document within a corpus.",
+      "aliases": ["tfidf", "tf idf", "term frequency inverse document frequency"],
+      "subdir": "concepts"
+    },
+    "cosine similarity": {
+      "canonical_name": "Cosine Similarity",
+      "canonical_type": "metric",
+      "compatible_types": ["metric", "algorithm", "method"],
+      "description": "Measure of similarity between two non-zero vectors defined as the cosine of the angle between them.",
+      "aliases": ["cosine sim"],
+      "subdir": "concepts"
+    },
+    "fts5": {
+      "canonical_name": "FTS5",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "technique", "framework"],
+      "description": "SQLite's full-text search extension providing inverted-index search with BM25 ranking.",
+      "aliases": ["sqlite fts5", "fts 5"],
+      "subdir": "entities"
+    },
+    "word2vec": {
+      "canonical_name": "word2vec",
+      "canonical_type": "model",
+      "compatible_types": ["model", "method", "algorithm"],
+      "description": "Shallow neural network model for learning word embeddings from large text corpora, introduced by Mikolov et al. at Google in 2013.",
+      "aliases": ["word 2 vec", "w2v"],
+      "subdir": "entities"
+    },
+    "glove": {
+      "canonical_name": "GloVe",
+      "canonical_type": "model",
+      "compatible_types": ["model", "method", "algorithm"],
+      "description": "Global Vectors for Word Representation, an unsupervised learning algorithm for obtaining word embeddings.",
+      "aliases": ["global vectors"],
+      "subdir": "entities"
+    },
+    "cnn": {
+      "canonical_name": "CNN",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method", "framework"],
+      "description": "Convolutional Neural Network, a class of deep learning models particularly well-suited for image and signal processing.",
+      "aliases": ["convolutional neural network", "conv net", "convnet"],
+      "subdir": "concepts"
+    },
+    "rnn": {
+      "canonical_name": "RNN",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method"],
+      "description": "Recurrent Neural Network, a class of artificial neural networks where connections form a temporal sequence.",
+      "aliases": ["recurrent neural network"],
+      "subdir": "concepts"
+    },
+    "lstm": {
+      "canonical_name": "LSTM",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method"],
+      "description": "Long Short-Term Memory, a recurrent neural network architecture designed to handle long-range dependencies.",
+      "aliases": ["long short-term memory", "long short term memory"],
+      "subdir": "concepts"
+    },
+    "gan": {
+      "canonical_name": "GAN",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "framework", "method"],
+      "description": "Generative Adversarial Network, a machine learning framework where two neural networks contest each other in a zero-sum game.",
+      "aliases": ["generative adversarial network", "adversarial network"],
+      "subdir": "concepts"
+    },
+    "vae": {
+      "canonical_name": "VAE",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method"],
+      "description": "Variational Autoencoder, a generative model that uses variational inference to learn latent representations.",
+      "aliases": ["variational autoencoder", "variational auto encoder"],
+      "subdir": "concepts"
+    },
+    "diffusion model": {
+      "canonical_name": "Diffusion Model",
+      "canonical_type": "architecture",
+      "compatible_types": ["architecture", "method", "framework"],
+      "description": "Class of generative models that learn to reverse a progressive noising process applied to training data.",
+      "aliases": ["diffusion models", "denoising diffusion"],
+      "subdir": "concepts"
+    },
+    "embedding": {
+      "canonical_name": "Embedding",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique", "framework"],
+      "description": "Dense vector representation of discrete objects such as words, sentences, or entities in a continuous feature space.",
+      "aliases": ["embeddings", "vector embedding"],
+      "subdir": "concepts"
+    },
+    "quantization": {
+      "canonical_name": "Quantization",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique"],
+      "description": "Technique for reducing the precision of neural network weights and activations to lower memory and compute requirements.",
+      "aliases": ["model quantization", "weight quantization"],
+      "subdir": "concepts"
+    },
+    "distillation": {
+      "canonical_name": "Knowledge Distillation",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique"],
+      "description": "Process of transferring knowledge from a large teacher model to a smaller student model, introduced by Hinton et al. 2015.",
+      "aliases": ["knowledge distillation", "model distillation", "distillation"],
+      "subdir": "concepts"
+    },
+    "pruning": {
+      "canonical_name": "Pruning",
+      "canonical_type": "method",
+      "compatible_types": ["method", "technique"],
+      "description": "Model compression technique that removes redundant neural network parameters without significantly harming performance.",
+      "aliases": ["model pruning", "network pruning"],
+      "subdir": "concepts"
+    },
+    "gguf": {
+      "canonical_name": "GGUF",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework", "technique"],
+      "description": "GPT-Generated Unified Format, a file format for storing quantized neural network models used by llama.cpp.",
+      "aliases": ["gguf format"],
+      "subdir": "entities"
+    },
+    "onnx": {
+      "canonical_name": "ONNX",
+      "canonical_type": "tool",
+      "compatible_types": ["tool", "framework"],
+      "description": "Open Neural Network Exchange, an open format for representing machine learning models.",
+      "aliases": ["open neural network exchange"],
+      "subdir": "entities"
+    }
+  }
+}

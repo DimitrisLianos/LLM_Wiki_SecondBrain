@@ -10,31 +10,18 @@ usage:
 
 import argparse
 import re
-import sys
 import time
 import urllib.error
 from datetime import date
-from pathlib import Path
 
 from llm_client import (
-    WIKI_DIR, SUBDIRS, MAX_CONTEXT_CHARS,
+    WIKI_DIR, MAX_CONTEXT_CHARS,
     ContextOverflowError, llm,
 )
 from search import WikiSearch
 
 
 # --- wiki helpers. ---
-
-def get_all_pages():
-    """read every wiki page. fallback for empty search results."""
-    pages = {}
-    for subdir in SUBDIRS:
-        d = WIKI_DIR / subdir
-        if d.exists():
-            for f in d.glob("*.md"):
-                pages[f.stem] = f.read_text()
-    return pages
-
 
 def _truncate_context(context, max_chars=MAX_CONTEXT_CHARS):
     """trim context to fit within the context window.
@@ -67,7 +54,13 @@ def retrieve_context(question):
     """find relevant wiki pages via fts5 + wikilink graph + rrf.
 
     replaces the old llm-based page selection — instant, no tokens spent.
-    falls back to loading all pages if search returns nothing.
+    returns an empty dict when no search results match; the caller is
+    responsible for telling the user the wiki has nothing relevant.
+
+    the previous behavior (load every page on empty fts) was dangerous:
+    on a wiki with hundreds of sources it would dump the entire corpus
+    into the llm context, blow past the window, and return a truncated
+    answer that had nothing to do with the question.
     """
     with WikiSearch() as ws:
         context, names, was_truncated = ws.search_and_load(
@@ -83,9 +76,9 @@ def retrieve_context(question):
             print(f"    ... and {len(context) - 10} more")
         return context
 
-    # no fts5 hits — load everything.
-    print("    (no search results, loading all pages)")
-    return get_all_pages()
+    # no fts5 hits — fail fast instead of loading the whole wiki.
+    print("    (no matching pages)")
+    return {}
 
 
 def answer_question(question, context):
@@ -133,7 +126,10 @@ def query(question, save=False):
     search_ms = (time.time() - t0) * 1000
 
     if not context:
-        print("\n  wiki is empty. ingest some sources first.")
+        print(
+            "\n  no wiki pages matched this question.\n"
+            "  try different keywords, or ingest more sources first.\n"
+        )
         return
 
     print(f"    ({len(context)} pages, {search_ms:.0f}ms)")
@@ -178,6 +174,12 @@ def interactive():
         save = q.startswith("/save ")
         if save:
             q = q[6:].strip()
+            if not q:
+                # "/save" with no question — skip instead of firing a
+                # query with an empty string (which would match
+                # everything and file a junk synthesis page).
+                print("  (usage: /save <your question>)\n")
+                continue
 
         try:
             query(q, save=save)
@@ -185,7 +187,9 @@ def interactive():
             print("\n  error: can't reach the llama.cpp server.")
             print("  is it running? bash scripts/start_server.sh\n")
         except Exception as e:
-            print(f"\n  error: {e}\n")
+            # top-of-loop broad catch keeps the interactive session alive.
+            # log the exception class so users can report real issues.
+            print(f"\n  error: {type(e).__name__}: {e}\n")
 
 
 if __name__ == "__main__":

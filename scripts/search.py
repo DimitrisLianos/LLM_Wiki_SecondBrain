@@ -18,10 +18,24 @@ import sqlite3
 from collections import defaultdict
 from pathlib import Path
 
-from llm_client import WIKI_DIR, DB_PATH, SUBDIRS, MAX_CONTEXT_CHARS
+from llm_client import (
+    DB_PATH, FRONTMATTER_RE, MAX_CONTEXT_CHARS, SUBDIRS, WIKI_DIR,
+)
 
 # bm25 column weights: name 10x, type 3x, tags 5x, content 1x.
 BM25_WEIGHTS = (10.0, 3.0, 5.0, 1.0)
+
+# extracts the "`raw/<filename>`" marker we embed in every source page.
+# used by build_index to populate the reverse index that maps raw
+# filenames back to the source page they were ingested into.
+_SOURCE_MARKER_RE = re.compile(r"`raw/([^`]+)`")
+
+# extracts the source_hash frontmatter value so idempotency checks
+# can read the hash from sqlite instead of opening each source page.
+_SOURCE_HASH_RE = re.compile(
+    r"^source_hash:\s*([a-f0-9]{64})\s*$",
+    re.MULTILINE,
+)
 
 
 class WikiSearch:
@@ -53,12 +67,24 @@ class WikiSearch:
     # --- index building. ---
 
     def build_index(self):
-        """rebuild the fts5 index from all wiki pages. <1s for hundreds of pages."""
+        r"""rebuild the fts5 index from all wiki pages. <1s for hundreds of pages.
+
+        also populates the ``source_files`` reverse index: every source
+        page embeds a ``\`raw/<filename>\``` marker during ingest, so we
+        can build a filename -> (source_page, source_hash) map without
+        any extra disk i/o beyond what we already do for fts.
+
+        the reverse index replaces the O(N) linear scan that
+        ingest._find_source_page_for used to run on every ingest. on a
+        wiki with hundreds of sources that drops idempotency check cost
+        from "open every file" to a single indexed sqlite SELECT.
+        """
         conn = self._connect()
 
         # drop and recreate for clean rebuild.
         conn.execute("DROP TABLE IF EXISTS wiki_fts")
         conn.execute("DROP TABLE IF EXISTS wiki_pages")
+        conn.execute("DROP TABLE IF EXISTS source_files")
 
         # raw content table for full page retrieval.
         conn.execute("""
@@ -74,6 +100,18 @@ class WikiSearch:
             CREATE VIRTUAL TABLE wiki_fts USING fts5(
                 name, type, tags, content,
                 tokenize='porter unicode61'
+            )
+        """)
+
+        # reverse index: raw filename -> source page name + sha256 hash.
+        # keyed on filename (the stable identifier) so re-uploads update
+        # the row in place. source_page stores the page stem (not the
+        # full path) so the index survives WIKI_DIR moves.
+        conn.execute("""
+            CREATE TABLE source_files (
+                filename    TEXT PRIMARY KEY,
+                source_page TEXT NOT NULL,
+                source_hash TEXT NOT NULL DEFAULT ''
             )
         """)
 
@@ -98,8 +136,56 @@ class WikiSearch:
                 )
                 count += 1
 
+                # reverse index population — only source pages have
+                # `raw/<filename>` markers, so the regex short-circuits
+                # cleanly for entities/concepts/synthesis.
+                if subdir == "sources":
+                    for match in _SOURCE_MARKER_RE.finditer(text):
+                        filename = match.group(1).strip()
+                        if not filename:
+                            continue
+                        hash_match = _SOURCE_HASH_RE.search(text)
+                        source_hash = hash_match.group(1) if hash_match else ""
+                        conn.execute(
+                            "INSERT OR REPLACE INTO source_files "
+                            "VALUES (?, ?, ?)",
+                            (filename, name, source_hash),
+                        )
+
         conn.commit()
         return count
+
+    # --- reverse index queries. ---
+
+    def find_source_page(self, filename):
+        """return the source-page stem for a raw filename, or None.
+
+        this is the fast replacement for ingest._find_source_page_for's
+        linear scan. the caller still has to resolve (stem -> Path) if
+        they need the on-disk location; we only return the stem here so
+        the index stays WIKI_DIR-relocation safe.
+        """
+        self._ensure_index()
+        conn = self._connect()
+        row = conn.execute(
+            "SELECT source_page FROM source_files WHERE filename = ?",
+            (filename,),
+        ).fetchone()
+        return row[0] if row else None
+
+    def read_source_hash(self, filename):
+        """return the cached sha256 source_hash for a raw filename.
+
+        cheaper than reading + parsing the source page on every idempotency
+        check. empty string if we have no row OR the row has no hash.
+        """
+        self._ensure_index()
+        conn = self._connect()
+        row = conn.execute(
+            "SELECT source_hash FROM source_files WHERE filename = ?",
+            (filename,),
+        ).fetchone()
+        return row[0] if row and row[0] else ""
 
     def _ensure_index(self):
         """auto-build index if it doesn't exist yet."""
@@ -246,12 +332,10 @@ class WikiSearch:
 
 def _extract_frontmatter(text):
     """pull type and tags from yaml frontmatter."""
-    if not text.startswith("---"):
+    match = FRONTMATTER_RE.match(text)
+    if not match:
         return "", ""
-    end = text.find("---", 3)
-    if end == -1:
-        return "", ""
-    fm = text[3:end]
+    fm = match.group(1)
 
     page_type = ""
     m = re.search(r"type:\s*(.+)", fm)
@@ -268,12 +352,10 @@ def _extract_frontmatter(text):
 
 def _strip_frontmatter(text):
     """remove yaml frontmatter, return body text only."""
-    if not text.startswith("---"):
+    match = FRONTMATTER_RE.match(text)
+    if not match:
         return text
-    end = text.find("---", 3)
-    if end == -1:
-        return text
-    return text[end + 3:].strip()
+    return text[match.end():].strip()
 
 
 def _build_link_graph(conn):
