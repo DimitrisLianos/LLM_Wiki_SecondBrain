@@ -24,7 +24,7 @@
 graph TB
  user(("User<br/>single human<br/>at one MacBook"))
 
- subgraph SYS ["LLM Wiki &mdash; system in scope"]
+ subgraph SYS ["LLM Wiki -- system in scope"]
  app["Python CLI scripts<br/>+<br/>llama.cpp inference servers<br/>+<br/>SQLite FTS5 index<br/>+<br/>Obsidian vault"]
  end
 
@@ -34,7 +34,7 @@ graph TB
  hf[("Hugging Face<br/><i>one-time GGUF download</i>")]
  gh[("GitHub<br/><i>one-time fork clone</i>")]
 
- user -- "CLI commands:<br/>ingest &middot; query &middot; lint &middot; watch" --> app
+ user -- "CLI commands:<br/>ingest · query · lint · watch" --> app
  app -- "synthesized answer<br/>with [[wikilink]] citations<br/>(stdout)" --> user
  user -- "drops source files" --> fs
  app -- "reads / writes<br/>(filesystem syscalls)" --> fs

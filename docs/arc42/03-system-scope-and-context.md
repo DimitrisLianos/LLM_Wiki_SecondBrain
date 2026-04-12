@@ -12,11 +12,11 @@ The system exists to make one human, the user, able to ingest and then query the
 graph TB
  user(("User<br/>single human<br/>at one MacBook"))
 
- subgraph SYSTEM ["LLM Wiki &mdash; fully local knowledge base"]
+ subgraph SYSTEM ["LLM Wiki -- fully local knowledge base"]
  wiki["Obsidian vault<br/>raw/ + wiki/<br/>+ db/"]
  end
 
- sources[("Raw source files<br/>PDF &middot; MD &middot; TXT &middot; XML<br/>personal, confidential")]
+ sources[("Raw source files<br/>PDF · MD · TXT · XML<br/>personal, confidential")]
  model[("GGUF weights<br/>Gemma 4 26B-A4B UD<br/>~16 GB, one-off download")]
  obsidian["Obsidian<br/><i>read-only browser</i>"]
 
@@ -24,7 +24,7 @@ graph TB
  sources -- "ingest" --> SYSTEM
  user -- "asks questions<br/>via CLI" --> SYSTEM
  SYSTEM -- "answers with<br/>[[wikilink]] citations" --> user
- user -- "reads &amp;<br/>curates" --> obsidian
+ user -- "reads and<br/>curates" --> obsidian
  obsidian -- "graph view<br/>backlinks" --> SYSTEM
  model -. "one-time<br/>download" .-> SYSTEM
 

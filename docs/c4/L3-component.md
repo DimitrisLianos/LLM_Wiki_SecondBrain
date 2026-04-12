@@ -28,7 +28,7 @@ We do not zoom into every container. Only three are interesting at component lev
 
 ```mermaid
 graph TB
- subgraph INGEST ["ingest.py &mdash; components"]
+ subgraph INGEST ["ingest.py -- components"]
  direction LR
 
  subgraph READ ["Read layer"]
@@ -55,7 +55,7 @@ graph TB
  end
 
  subgraph RESOLVE ["Resolve layer"]
- resolve["resolver.resolve()<br/><i>stages 0&ndash;5</i>"]
+ resolve["resolver.resolve()<br/><i>stages 0-5</i>"]
  end
 
  subgraph WRITE ["Write layer"]
@@ -133,13 +133,13 @@ The read pipeline is intentionally much thinner than the write pipeline. `query.
 
 ```mermaid
 graph TB
- subgraph READ_CTRL ["query.py &mdash; control"]
+ subgraph READ_CTRL ["query.py -- control"]
  answer["answer_question()"]
  retrieve_ctx["retrieve_context()"]
  synth["synthesise_prompt()"]
  end
 
- subgraph SEARCH_LIB ["search.py &mdash; WikiSearch"]
+ subgraph SEARCH_LIB ["search.py -- WikiSearch"]
  build["build_index()"]
  search["search()<br/><i>FTS5 + BM25</i>"]
  graph_exp["_graph_expand()<br/><i>1-hop BFS on<br/>wikilink adjacency</i>"]
@@ -200,44 +200,44 @@ Retrieval is ~5 ms total. Synthesis dominates the wall clock (~3-10 s). The poin
 
 ```mermaid
 graph TB
- subgraph RESOLVER ["resolver.py &mdash; components"]
+ subgraph RESOLVER ["resolver.py -- components"]
  direction TB
 
  entry["Resolver.resolve()<br/><i>public entry point</i>"]
 
- subgraph S0 ["Stage 0 &mdash; Gazetteer anchor"]
+ subgraph S0 ["Stage 0 -- Gazetteer anchor"]
  s0["_stage_0_alias_anchor()<br/><i>~110 lines</i>"]
  end
 
- subgraph S1 ["Stage 1 &mdash; Exact path"]
+ subgraph S1 ["Stage 1 -- Exact path"]
  s1["_stage_1_exact_path()<br/><i>~30 lines</i>"]
  end
 
- subgraph S2 ["Stage 2 &mdash; Type constraint"]
+ subgraph S2 ["Stage 2 -- Type constraint"]
  s2["_stage_2_type_constraint()<br/><i>~70 lines</i>"]
  end
 
- subgraph S3 ["Stage 3 &mdash; Jaccard"]
+ subgraph S3 ["Stage 3 -- Jaccard"]
  s3["_stage_3_jaccard()<br/><i>~50 lines</i>"]
  stem["porter_stem() +<br/>stopwords<br/><i>pure Python</i>"]
  end
 
- subgraph S4 ["Stage 4 &mdash; LLM judge"]
+ subgraph S4 ["Stage 4 -- LLM judge"]
  s4["_stage_4_llm_judge()<br/><i>~90 lines</i>"]
  jcache["judge_cache<br/><i>JSON</i>"]
  end
 
- subgraph S5 ["Stage 5 &mdash; bge-m3 cosine (opt-in)"]
+ subgraph S5 ["Stage 5 -- bge-m3 cosine (opt-in)"]
  s5["_stage_5_embed_cosine()<br/><i>~130 lines</i>"]
  ecache["embed_cache<br/><i>JSON</i>"]
  f1["_f1_optimal_threshold()<br/><i>Fawcett 2006<br/>+ MIN_SAMPLES/NEG/POS gates</i>"]
  calib["resolver_calibration<br/><i>JSON</i>"]
  end
 
- subgraph GAZ_CTR ["aliases.py &mdash; gazetteer sidecar"]
+ subgraph GAZ_CTR ["aliases.py -- gazetteer sidecar"]
  seed["seed_aliases.json<br/><i>149 entries<br/>git-tracked</i>"]
  runtime["alias_registry.json<br/><i>runtime-promoted<br/>gitignored</i>"]
- promote["promote()<br/><i>&ge; 3 sources +<br/>non-generic desc</i>"]
+ promote["promote()<br/><i>≥ 3 sources +<br/>non-generic desc</i>"]
  end
 
  entry --> s0

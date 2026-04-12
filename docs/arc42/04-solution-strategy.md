@@ -10,16 +10,16 @@ The architecture integrates four independent recent developments. Each pillar is
 
 ```mermaid
 graph TB
- subgraph P1 ["Pillar 1 &mdash; The Pattern"]
- p1["Karpathy's LLM Wiki pattern<br/><i>April 2026</i><br/><b>role:</b> organising principle<br/>raw &rarr; compiled wiki &rarr; query"]
+ subgraph P1 ["Pillar 1 -- The Pattern"]
+ p1["Karpathy's LLM Wiki pattern<br/><i>April 2026</i><br/><b>role:</b> organising principle<br/>raw → compiled wiki → query"]
  end
- subgraph P2 ["Pillar 2 &mdash; The Model"]
+ subgraph P2 ["Pillar 2 -- The Model"]
  p2["Gemma 4 26B-A4B<br/><i>MoE, 25,2 B / 3,8 B active</i><br/><b>role:</b> knowledge capacity at<br/>4B-class inference cost"]
  end
- subgraph P3 ["Pillar 3 &mdash; The Weights"]
+ subgraph P3 ["Pillar 3 -- The Weights"]
  p3["Unsloth Dynamic 2.0 (UD)<br/><i>per-layer importance-weighted</i><br/><b>role:</b> more quality per GB<br/>without changing file size"]
  end
- subgraph P4 ["Pillar 4 &mdash; The Runtime"]
+ subgraph P4 ["Pillar 4 -- The Runtime"]
  p4["TurboQuant KV cache<br/><i>q8_0 K + turbo4 V</i><br/><b>role:</b> 3 GB of headroom<br/>freed at identical quality"]
  end
 
@@ -81,7 +81,7 @@ The strategic flow, one level above the building-block view. Two pipelines: *wri
 
 ```mermaid
 graph LR
- subgraph WRITE ["Write pipeline &mdash; rare, expensive, compounding"]
+ subgraph WRITE ["Write pipeline -- rare, expensive, compounding"]
  direction LR
  R["raw/"]
  I["ingest.py"]
@@ -97,7 +97,7 @@ graph LR
  W --> DB
  end
 
- subgraph READ ["Read pipeline &mdash; fast, local, compounding"]
+ subgraph READ ["Read pipeline -- fast, local, compounding"]
  direction LR
  Q["question"]
  S["search.py"]

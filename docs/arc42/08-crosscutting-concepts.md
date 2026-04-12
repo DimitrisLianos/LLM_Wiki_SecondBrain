@@ -104,7 +104,7 @@ graph LR
  db[(db/wiki_search.db<br/>SQLite FTS5<br/><b>derived index</b>)]
  caches[(db/*.json<br/>caches + calibration<br/><b>incremental state</b>)]
 
- src -- "write &amp; read" --> md
+ src -- "write and read" --> md
  src -- "rebuild from md" --> db
  src -- "read for query" --> db
  src -- "append-only write" --> caches

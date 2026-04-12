@@ -86,9 +86,9 @@ This is the reading order the user's original prompt asked for: *"what we did, w
 
 ```mermaid
 graph LR
- S1["§ 1<br/>Intro &amp; Goals"]
+ S1["§ 1<br/>Intro and Goals"]
  S2["§ 2<br/>Constraints"]
- S3["§ 3<br/>Scope &amp; Context"]
+ S3["§ 3<br/>Scope and Context"]
  S4["§ 4<br/>Strategy"]
  S5["§ 5<br/>Building Blocks"]
  S6["§ 6<br/>Runtime"]
@@ -96,7 +96,7 @@ graph LR
  S8["§ 8<br/>Cross-cutting"]
  S9["§ 9<br/>ADRs"]
  S10["§ 10<br/>Quality"]
- S11["§ 11<br/>Risks &amp; Debt"]
+ S11["§ 11<br/>Risks and Debt"]
  S12["§ 12<br/>Glossary"]
  SA["Appendix A<br/>Retrospective"]
 

@@ -13,7 +13,7 @@ graph TB
  user(("User"))
 
  subgraph SYS ["LLM Wiki system"]
- subgraph CLI ["Container &mdash; CLI scripts<br/>Python 3.12+, stdlib only"]
+ subgraph CLI ["Container -- CLI scripts<br/>Python 3.12+, stdlib only"]
  ingest["ingest.py<br/><i>write pipeline</i>"]
  query["query.py<br/><i>read pipeline</i>"]
  search_c["search.py<br/><i>retrieval library</i>"]
@@ -22,24 +22,24 @@ graph TB
  watch["watch.sh<br/><i>filesystem trigger</i>"]
  end
 
- subgraph INF ["Container &mdash; Inference servers<br/>llama.cpp (TurboQuant fork)"]
+ subgraph INF ["Container -- Inference servers<br/>llama.cpp (TurboQuant fork)"]
  gen["Generation server<br/><i>Gemma 4 26B-A4B<br/>127.0.0.1:8080</i>"]
  emb["Embedding server<br/><i>bge-m3 (optional)<br/>127.0.0.1:8081</i>"]
  end
 
- subgraph VAULT ["Container &mdash; Obsidian vault<br/>filesystem, Markdown + YAML"]
+ subgraph VAULT ["Container -- Obsidian vault<br/>filesystem, Markdown + YAML"]
  raw["raw/<br/><i>immutable</i>"]
  wiki["wiki/<br/><i>sources, entities,<br/>concepts, synthesis</i>"]
  idxlog["wiki/index.md<br/>wiki/log.md"]
  end
 
- subgraph SIDE ["Container &mdash; Derived state<br/>regeneratable, gitignored"]
+ subgraph SIDE ["Container -- Derived state<br/>regeneratable, gitignored"]
  db["db/wiki_search.db<br/><i>SQLite FTS5</i>"]
  reg["db/alias_registry.json<br/><i>runtime gazetteer</i>"]
  calib["db/judge_cache.json<br/>db/embed_cache.json<br/>db/resolver_calibration.json"]
  end
 
- subgraph GAZ ["Container &mdash; Seed gazetteer<br/>git-tracked, read-only"]
+ subgraph GAZ ["Container -- Seed gazetteer<br/>git-tracked, read-only"]
  seed["scripts/data/<br/>seed_aliases.json<br/><i>149 curated entries</i>"]
  end
  end

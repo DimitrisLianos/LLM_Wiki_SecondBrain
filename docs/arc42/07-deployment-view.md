@@ -10,7 +10,7 @@ The deployment target is a **single Apple Silicon laptop**. There is no cluster,
 
 ```mermaid
 graph TB
- subgraph HW ["Hardware &mdash; MacBook Pro M5 (2025)"]
+ subgraph HW ["Hardware -- MacBook Pro M5 (2025)"]
  cpu["Apple M5 SoC<br/>10 performance cores<br/>+ 4 efficiency cores"]
  gpu["Integrated GPU<br/>(Metal)"]
  ram["32 GB unified memory<br/><i>shared CPU/GPU address space</i>"]
@@ -88,7 +88,7 @@ Nothing else. No outbound HTTPS, no telemetry, no update check. The entire syste
 This is the single most load-bearing table in the document. Every decision in [section 4](04-solution-strategy.md) exists to keep this budget solvent.
 
 ```mermaid
-pie title "32 GB unified memory on M5 &mdash; at steady state"
+pie title "32 GB unified memory on M5 -- at steady state"
  "Gemma 4 26B-A4B UD Q4_K_M (mmap)" : 16
  "KV cache (q8_0 K + turbo4 V, 2 × 32 K)" : 3
  "macOS + running apps" : 5
@@ -164,7 +164,7 @@ Every file in the repository is either source code, documentation, or a `.gitkee
 
 ```mermaid
 graph LR
- subgraph TRACKED ["Git-tracked &mdash; source of truth"]
+ subgraph TRACKED ["Git-tracked -- source of truth"]
  src["scripts/*.py<br/><i>~6 000 lines</i>"]
  doc["docs/arc42/*.md<br/>docs/c4/*.md<br/>README.md<br/>CLAUDE.md"]
  seed["scripts/data/seed_aliases.json<br/><i>149 curated entries</i>"]
@@ -172,7 +172,7 @@ graph LR
  keep[".gitkeep markers"]
  end
 
- subgraph GITIGNORED ["Gitignored &mdash; rebuildable or personal"]
+ subgraph GITIGNORED ["Gitignored -- rebuildable or personal"]
  weights["models/*.gguf<br/><i>one-time download</i>"]
  build["llama.cpp/build/<br/><i>cmake output</i>"]
  db["db/wiki_search.db<br/>db/alias_registry.json<br/>db/judge_cache.json<br/>db/embed_cache.json<br/>db/resolver_calibration.json"]

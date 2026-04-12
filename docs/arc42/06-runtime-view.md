@@ -34,7 +34,7 @@ sequenceDiagram
  I->>I: resolve path under RAW_DIR<br/>validate containment
  I->>P: subprocess.run(["pdftotext", path, "-"])
  P-->>I: UTF-8 text
- I->>I: chunk_text() &mdash; paragraph split, max 50K chars
+ I->>I: chunk_text() -- paragraph split, max 50K chars
 
  par Parallel extraction across 2 slots
  I->>S: POST /v1/chat/completions<br/>(chunk 1, extraction prompt)
@@ -44,7 +44,7 @@ sequenceDiagram
  S-->>I: JSON {entities, concepts, claims}
  end
 
- I->>I: merge_extractions() &mdash; dedup across chunks
+ I->>I: merge_extractions() -- dedup across chunks
 
  opt Context-local descriptions detected
  I->>S: POST /v1/chat/completions<br/>(_canonicalize_descriptions prompt)
@@ -56,7 +56,7 @@ sequenceDiagram
 
  loop For each entity / concept
  I->>R: resolver.resolve(name, type, desc, source)
- R->>G: stage 0 &mdash; gazetteer lookup
+ R->>G: stage 0 -- gazetteer lookup
  alt Gazetteer hit
  G-->>R: canonical
  R-->>I: merge (stage 0)
@@ -67,7 +67,7 @@ sequenceDiagram
  end
 
  I->>S: POST /v1/chat/completions<br/>(source-page summary prompt)
- S-->>I: 3&ndash;4 paragraph synthesis
+ S-->>I: 3-4 paragraph synthesis
 
  I->>W: write source page
  I->>W: write/update entity pages
@@ -104,7 +104,7 @@ sequenceDiagram
  DB-->>S: top 10 BM25-ranked hits
  S->>DB: SELECT target FROM wikilinks<br/>WHERE source IN (top hits)
  DB-->>S: 1-hop adjacency
- S->>S: _rrf() &mdash; fuse (BM25 rank, graph rank)<br/>with k = 60 (Cormack et al. 2009)
+ S->>S: _rrf() -- fuse (BM25 rank, graph rank)<br/>with k = 60 (Cormack et al. 2009)
  S-->>Q: ranked page list
 
  Q->>W: read top pages within 40K char budget<br/>(source pages prioritised)
@@ -158,7 +158,7 @@ sequenceDiagram
  I->>R: resolve(name="ChatGPT", type="tool", desc="...")
 
  rect rgba(200, 230, 200, 0.25)
- note over R,G: Stage 0 &mdash; Gazetteer anchor (prevention layer)
+ note over R,G: Stage 0 -- Gazetteer anchor (prevention layer)
  R->>G: lookup("ChatGPT")
  alt Gazetteer hit
  G-->>R: canonical="ChatGPT", type="product", blurb="..."
@@ -167,7 +167,7 @@ sequenceDiagram
  end
 
  rect rgba(200, 220, 240, 0.25)
- note over R,FS: Stage 1 &mdash; Exact path check
+ note over R,FS: Stage 1 -- Exact path check
  R->>FS: find_existing_page(name)
  alt No existing file
  R-->>I: CREATE new page
@@ -175,23 +175,23 @@ sequenceDiagram
  end
 
  rect rgba(240, 220, 220, 0.25)
- note over R: Stage 2 &mdash; Type-constraint fork<br/>(only when descriptions also disagree)
+ note over R: Stage 2 -- Type-constraint fork<br/>(only when descriptions also disagree)
  alt type mismatch AND low Jaccard
  R-->>I: FORK disambiguated
  end
  end
 
  rect rgba(240, 230, 200, 0.25)
- note over R: Stage 3 &mdash; Stemmed Jaccard
- alt Jaccard &ge; 0,55
+ note over R: Stage 3 -- Stemmed Jaccard
+ alt Jaccard >= 0.55
  R-->>I: MERGE
- else Jaccard &le; 0,15
+ else Jaccard <= 0.15
  R-->>I: FORK
  end
  end
 
  rect rgba(230, 210, 240, 0.25)
- note over R,DB: Stage 4 &mdash; LLM judge (cached)
+ note over R,DB: Stage 4 -- LLM judge (cached)
  R->>DB: judge_cache.get((name, existing))
  alt cache hit
  DB-->>R: cached verdict
@@ -203,7 +203,7 @@ sequenceDiagram
  end
 
  rect rgba(220, 240, 230, 0.25)
- note over R,EM: Stage 5 &mdash; bge-m3 cosine (opt-in only)
+ note over R,EM: Stage 5 -- bge-m3 cosine (opt-in only)
  alt use_embeddings=True
  R->>EM: POST /v1/embeddings (name + desc)
  EM-->>R: 1024-dim vector
@@ -285,10 +285,10 @@ sequenceDiagram
 
  I->>L: llm(prompt for chunk [0..50000])
  L->>S: POST /v1/chat/completions
- S-->>L: HTTP 400 &mdash; context overflow
+ S-->>L: HTTP 400 -- context overflow
  L-->>I: raise ContextOverflowError
 
- note over I: catch &rarr; split at nearest<br/>paragraph boundary to midpoint
+ note over I: catch → split at nearest<br/>paragraph boundary to midpoint
 
  par Retry each half in parallel
  I->>L: llm(prompt for chunk [0..25000])

@@ -35,17 +35,17 @@ graph TB
 
  repro --> QS4[QS-4 Zero-install setup]
  repro --> QS5[QS-5 Rebuildable derived state]
- repro --> QS6[QS-6 Same input &rarr; same output]
+ repro --> QS6[QS-6 Same input → same output]
 
- retr --> QS7[QS-7 Retrieval latency &lt; 10 ms]
+ retr --> QS7[QS-7 Retrieval latency < 10 ms]
  retr --> QS8[QS-8 Relevant page in top-5]
  retr --> QS9[QS-9 Answer cites real pages]
 
- opseff --> QS10[QS-10 Ingest 1 MB PDF in &lt; 5 min]
- opseff --> QS11[QS-11 Query answer in &lt; 10 s]
+ opseff --> QS10[QS-10 Ingest 1 MB PDF in < 5 min]
+ opseff --> QS11[QS-11 Query answer in < 10 s]
  opseff --> QS12[QS-12 Memory fits 32 GB]
 
- maint --> QS13[QS-13 Files &le; 800 lines]
+ maint --> QS13[QS-13 Files ≤ 800 lines]
  maint --> QS14[QS-14 Re-readable by one human]
  maint --> QS15[QS-15 Tests cover resolver]
 
