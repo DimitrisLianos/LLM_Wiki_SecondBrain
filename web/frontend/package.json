@@ -1,0 +1,19 @@
+{
+  "name": "secondbrain-ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.0",
+    "lit": "^3.2.0",
+    "marked": "^15.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

@@ -2,4 +2,13 @@
 name = "secondbrain-poc"
 version = "0.3.0"
 requires-python = ">=3.12"
-dependencies = []  # zero external dependencies — python stdlib only.
+
+# runtime dependencies beyond the python stdlib:
+#   * ddgs — optional web-search augmentation for the chat panel
+#           (ingest + query core remain stdlib-only).
+#   * fastapi + uvicorn — web UI backend (installed via `pip install "fastapi[standard]"`).
+# keep this list minimal on purpose: a fresh clone should run with only
+# the python stdlib + the optional extras below.
+dependencies = [
+    "ddgs>=9.0.0",
+]

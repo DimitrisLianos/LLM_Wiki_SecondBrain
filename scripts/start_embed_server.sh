@@ -28,7 +28,10 @@ PORT=8081
 CONTEXT=8192         # bge-m3 native max is 8192; matches paragraph-level use.
 PARALLEL=1           # embeddings are sub-second; no need to split slots.
 GPU_LAYERS=999
-THREADS=$(sysctl -n hw.performancecores 2>/dev/null || echo 8)
+# thread count: honours pre-set THREADS, falls back to macos core count,
+# then to a safe default. override via `THREADS=16 bash scripts/start_embed_server.sh`
+# on linux/wsl where sysctl is unavailable.
+THREADS="${THREADS:-$(sysctl -n hw.performancecores 2>/dev/null || echo 8)}"
 BATCH=2048
 
 case "${1:-start}" in

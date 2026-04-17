@@ -1,0 +1,2 @@
+# raw asset directory — images and attachments referenced by ingested
+# documents land here so obsidian's ![[file]] embeds can resolve.

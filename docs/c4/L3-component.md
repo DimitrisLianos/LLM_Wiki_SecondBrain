@@ -1,4 +1,4 @@
-# C4 Level 3 — Component View
+# C4 Level 3, Component View
 
 > **C4 Model, Level 3.** A Component diagram opens a single container from [Level 2](L2-container.md) into its internal parts. In the C4 vocabulary a *component* is "a grouping of related functionality encapsulated behind a well-defined interface", typically a class, a module, or a set of cohesive functions. We zoom into the three largest, most complex scripts inside the **CLI scripts** container: `ingest.py`, `query.py` + `search.py` and `resolver.py`.
 >
@@ -8,21 +8,22 @@
 
 ## Which containers are decomposed here
 
-We do not zoom into every container. Only three are interesting at component level:
+We do not zoom into every container. Four are interesting at component level:
 
 | Container | Decomposed here? | Why / why not |
 |---|---|---|
 | **CLI scripts, `ingest.py`** | ✓ [L3.A](#l3a--ingestpy-components) | Largest module (~1 850 lines); six distinct responsibility layers |
 | **CLI scripts, `query.py` + `search.py`** | ✓ [L3.B](#l3b--querypy--searchpy-components) | The read pipeline; shows the FTS5 + graph + RRF retrieval stack |
 | **CLI scripts, `resolver.py`** | ✓ [L3.C](#l3c--resolverpy-components) | The six-stage entity resolver, the most complex single-purpose module in the tree |
-| **CLI scripts, `lint.py`, `cleanup_dedup.py`, `watch.sh`** | No | Each is cohesive enough at container level |
 | **CLI scripts, `llm_client.py`** | No | It is a thin shared foundation, see [L3.D](#l3d--llm_clientpy-the-shared-foundation) |
+| **Web UI (`web/api` + `web/frontend`)** | ✓ [L3.E](#l3e--webapi--webfrontend-components) | Eight FastAPI routers + ten Lit components; shows the in-process delegation into `scripts/` |
+| **CLI scripts, `lint.py`, `cleanup_dedup.py`, `watch.sh`** | No | Each is cohesive enough at container level |
 | **Inference servers** | No | External processes, documented at [Level 2](L2-container.md#container-2--inference-servers-llamacpp--metal) |
 | **Vault / Derived state / Seed gazetteer** | No | Pure storage containers with no internal components |
 
 ---
 
-## L3.A — `ingest.py` components
+## L3.A, `ingest.py` components
 
 [`scripts/ingest.py`](../../scripts/ingest.py) is roughly 1 850 lines organised into six cohesive layers. Each layer has one responsibility; the handoffs are the only seams.
 
@@ -91,13 +92,13 @@ graph TB
  style WRITE fill:#fdebd0,stroke:#e67e22,color:#000
 ```
 
-### Component catalogue — `ingest.py`
+### Component catalogue, `ingest.py`
 
 | Layer | Component | Responsibility | External calls |
 |---|---|---|---|
 | Read | `detect_and_parse()` | Dispatches on file extension to the right parser | none |
 | Read | `_parse_pdf()` | Extracts UTF-8 text from a PDF via `pdftotext` | `subprocess.run(["pdftotext", path, "-"], shell=False)` |
-| Read | `_parse_sms_xml()` | Parses SMS backup XML into structured records | `xml.etree.ElementTree.parse()`, XXE-safe because Python's `ET` does not expand external entities ([arc42 § 11.1 SEC-3](../arc42/11-risks-and-technical-debt.md#111-security-posture)) |
+| Read | `_parse_sms_xml()` | Parses SMS backup XML into structured records | `xml.etree.ElementTree.parse()`, XXE-safe because Python's `ET` does not expand external entities by default on 3.12 |
 | Read | `_extract_source_date()` | Pulls the `CreationDate` metadata line from `pdfinfo` output; falls back to regex over the PDF text for hand-scanned documents | `subprocess.run(["pdfinfo", path], shell=False)` |
 | Chunk | `chunk_text()` | Paragraph-boundary splits at ≤ 50 000 chars per chunk. Single-article docs normally fit in one chunk; long PDFs split into 2-8. | none |
 | Extract | `extract_chunks_parallel()` | Parallel LLM extraction across the two llama.cpp slots via `ThreadPoolExecutor(max_workers=2)` | none directly |
@@ -127,7 +128,7 @@ This layering is the direct implementation of [ADR-001 (zero dependencies)](../a
 
 ---
 
-## L3.B — `query.py` + `search.py` components
+## L3.B, `query.py` + `search.py` components
 
 The read pipeline is intentionally much thinner than the write pipeline. `query.py` is a thin controller; `search.py` is a reusable retrieval library.
 
@@ -172,7 +173,7 @@ graph TB
  style LM_IF fill:#fdebd0,stroke:#e67e22,color:#000
 ```
 
-### Component catalogue — `query.py` + `search.py`
+### Component catalogue, `query.py` + `search.py`
 
 | Container | Component | Responsibility | Cost |
 |---|---|---|---|
@@ -194,7 +195,7 @@ Retrieval is ~5 ms total. Synthesis dominates the wall clock (~3-10 s). The poin
 
 ---
 
-## L3.C — `resolver.py` components
+## L3.C, `resolver.py` components
 
 [`scripts/resolver.py`](../../scripts/resolver.py) is the most complex single-purpose module in the tree (~600 lines of class + supporting helpers). It implements a six-stage entity-resolution pipeline. Each stage can terminate the pipeline with a verdict (`create`, `merge`, or `fork`); if no stage terminates, the default is `fork` (conservative, per [ADR-002](../arc42/09-architecture-decisions.md#adr-002--fork-on-uncertainty-never-silently-merge)).
 
@@ -306,7 +307,7 @@ All three gates must pass. These hard gates exist because an earlier version of 
 
 ---
 
-## L3.D — `llm_client.py`: the shared foundation
+## L3.D, `llm_client.py`: the shared foundation
 
 The smallest and most load-bearing module in the tree. Every other CLI script imports from it. It is intentionally *not* a subgraph in the component diagrams because it is referenced by all three of them.
 
@@ -357,6 +358,131 @@ The consolidation of `safe_filename()` and `find_existing_page()` here is the di
 
 ---
 
+## L3.E, `web/api` + `web/frontend` components
+
+The optional web UI container (see [L2 Container 5](L2-container.md#container-5--web-ui-fastapi--lit-optional)) is structurally a thin HTTP wrapper: it adds no new pipelines. Every router imports the same `scripts/*` modules the CLI uses and delegates to them in-process. The value it adds is presentation, request routing, HTTP-level hardening and a browser-friendly form of the operator loop.
+
+The same decomposition appears inline in [arc42 § 5.6](../arc42/05-building-block-view.md#56-whitebox-web--the-optional-ui-container); this is the standalone C4 restatement.
+
+```mermaid
+graph TB
+ subgraph API ["web/api -- FastAPI core"]
+ app["app.py<br/><i>ASGI entrypoint<br/>CSP + security headers<br/>SPA fallback with<br/>path-containment</i>"]
+ models["models.py<br/><i>Pydantic request /<br/>response schemas</i>"]
+ svc["services.py<br/><i>bridges scripts/ to routers<br/>WikiSearch, paths,<br/>server health helpers</i>"]
+ end
+
+ subgraph ROUT ["web/api/routers"]
+ r_server["server.py (228 L)<br/><i>start/stop llama-server,<br/>/health, /slots, reasoning<br/>toggle</i>"]
+ r_search["search.py (75 L)<br/><i>FTS5 passthrough</i>"]
+ r_wiki["wiki.py (134 L)<br/><i>list, read, rename, delete<br/>wiki pages + graph data</i>"]
+ r_query["query.py (929 L)<br/><i>multi-turn chat, intent<br/>routing, optional ddgs<br/>augmentation</i>"]
+ r_ingest["ingest.py (688 L)<br/><i>upload + background<br/>ingest with progress<br/>streaming</i>"]
+ r_lint["lint.py (332 L)<br/><i>wiki health checks +<br/>orphan cleanup</i>"]
+ r_dedup["dedup.py (268 L)<br/><i>cleanup_dedup driver<br/>(dry-run + apply)</i>"]
+ r_admin["admin.py (310 L)<br/><i>reset, reindex, logs,<br/>config inspection</i>"]
+ end
+
+ subgraph FRONT ["web/frontend (Vite build -> dist/)"]
+ main_js["src/main.js<br/><i>Lit entry, wires app-shell</i>"]
+ shell["components/app-shell.js<br/><i>layout + routing</i>"]
+ panels["components/*-panel.js<br/><i>server, search, query,<br/>ingest, lint, dedup</i>"]
+ views["components/wiki-browser.js<br/>components/page-viewer.js<br/>components/graph-view.js"]
+ lib_api["lib/api.js<br/><i>fetch wrapper over /api/*</i>"]
+ lib_md["lib/markdown.js<br/><i>Marked + DOMPurify</i>"]
+ lib_rt["lib/router.js<br/><i>hash SPA router</i>"]
+ lib_ic["lib/icons.js"]
+ end
+
+ SCRIPTS[("scripts/*<br/>ingest, search, query,<br/>lint, cleanup_dedup,<br/>llm_client, aliases")]
+ DDGS(["ddgs<br/><i>opt-in web search</i>"])
+
+ app --> models
+ app --> svc
+ app --> r_server
+ app --> r_search
+ app --> r_wiki
+ app --> r_query
+ app --> r_ingest
+ app --> r_lint
+ app --> r_dedup
+ app --> r_admin
+ app -. "static mount" .-> main_js
+
+ main_js --> shell
+ shell --> panels
+ shell --> views
+ panels --> lib_api
+ views --> lib_api
+ views --> lib_md
+ shell --> lib_rt
+ shell --> lib_ic
+
+ r_server -. "subprocess: start_server.sh" .-> SCRIPTS
+ r_search -. "WikiSearch (via services)" .-> SCRIPTS
+ r_wiki -. "llm_client helpers" .-> SCRIPTS
+ r_query -. "WikiSearch + llm_client" .-> SCRIPTS
+ r_query -. "optional" .-> DDGS
+ r_ingest -. "ingest pipeline" .-> SCRIPTS
+ r_lint -. "lint" .-> SCRIPTS
+ r_dedup -. "cleanup_dedup" .-> SCRIPTS
+ r_admin -. "llm_client + aliases" .-> SCRIPTS
+
+ style API fill:#fde2e4,stroke:#c0392b,color:#000
+ style ROUT fill:#fdebd0,stroke:#e67e22,color:#000
+ style FRONT fill:#eafaf1,stroke:#27ae60,color:#000
+```
+
+### Component catalogue, `web/api`
+
+| Component | Responsibility | Delegates to |
+|---|---|---|
+| `app.py` | ASGI entrypoint. Mounts the 8 routers under `/api/*`, serves the built frontend under `/`, applies CORS for `localhost:3000`/`:5173`, attaches the `SecurityHeadersMiddleware` (CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy). SPA fallback resolves the URL path against `web/frontend/dist/` and rejects anything that escapes that tree. | Pydantic models, uvicorn |
+| `models.py` | All Pydantic request/response schemas in one file. Validates input at the HTTP boundary so routers can assume well-typed data. | Pydantic |
+| `services.py` | Shared service layer. Adds `scripts/` to `sys.path` once at import time, re-exports `BASE_DIR`, `WIKI_DIR`, `DB_PATH`, `LLAMA_URL`, `EMBED_URL`, `safe_filename`, `WikiSearch`. Provides `check_server_health()`, `check_server_slots()`, `parse_server_config()` so routers never poll the inference servers directly. | `scripts/llm_client.py`, `scripts/search.py` |
+| `routers/server.py` | Starts and stops `start_server.sh` and `start_embed_server.sh` via `subprocess`. Polls `/health` and `/slots` on the generation and embedding endpoints. Exposes the `REASONING="on"/"off"` toggle documented in [arc42 TC-5](../arc42/02-architecture-constraints.md#21-technical-constraints). | `services.check_server_health()`, `subprocess.Popen` |
+| `routers/search.py` | Thin passthrough to `WikiSearch.search()`. Returns ranked rows only; hydration is the frontend's job. | `services.WikiSearch` |
+| `routers/wiki.py` | Lists pages, reads a single page with parsed frontmatter and inbound/outbound wikilinks, returns graph adjacency data for the `graph-view.js` component. Every path parameter is validated against `SUBDIRS` and resolved under `WIKI_DIR`. | `services.get_page()`, `services.build_wiki_graph()` |
+| `routers/query.py` | Multi-turn chat endpoint. Implements the 4-category SKR-style intent router (RETRIEVE / DIRECT / HYBRID / reserved) with one classification prompt before the generation prompt. Optionally augments with web-search results from `ddgs` when `web_search=true` (opt-in per request). Always returns a source-attribution tag ("from your documents", "from the model", "from both"). | `services.WikiSearch`, `llm_client.llm()`, `ddgs` (optional) |
+| `routers/ingest.py` | Accepts file uploads into `raw/`, launches the ingestion pipeline as a background task, streams progress events. Enforces reasoning-mode "off" for the ingest subprocess regardless of the UI toggle. | `scripts/ingest.py` as subprocess, `services.WikiSearch` |
+| `routers/lint.py` | Runs `scripts/lint.py` and surfaces categorised findings. Offers auto-fix for safe categories (broken wikilinks to obviously-canonical targets, orphan pages). | `scripts/lint.py` |
+| `routers/dedup.py` | Driver for `scripts/cleanup_dedup.py`. Dry-run is default; `--apply` is a separate endpoint so the destructive action needs an explicit operator click. | `scripts/cleanup_dedup.py` |
+| `routers/admin.py` | Log tail, config inspection, FTS5 reindex, manual alias promotion. The "admin" endpoints are the ones most likely to rewrite state, so path-containment and input validation are strictest here. | `services` + `aliases.py` |
+
+### Component catalogue, `web/frontend`
+
+The frontend is a Vite-built Lit single-page app. Ten components, four library modules, one entry point.
+
+| Component | Responsibility |
+|---|---|
+| `src/main.js` | Lit entry point. Imports `app-shell` and mounts it against `<app-shell>` in `index.html`. Everything else is lazy-loaded on demand via the router. |
+| `components/app-shell.js` | Top-level layout: sidebar, route outlet, global status indicator. Consumes `lib/router.js` to map URL hash → active panel/view. |
+| `components/server-panel.js` | Start/stop the generation and embedding servers, flip the reasoning toggle, watch live `/health` + `/slots` data. |
+| `components/search-panel.js` | FTS5 search input, ranked results list, hit-preview side panel. |
+| `components/wiki-browser.js` | Directory-tree view of `wiki/` with frontmatter badges (type, tag cloud, source count). |
+| `components/page-viewer.js` | Renders a single page: Markdown via `lib/markdown.js`, inbound/outbound wikilink panels, edit / rename / delete actions. |
+| `components/query-panel.js` | Multi-turn chat UI. Shows source attribution and the retrieved wiki pages used by each answer. Exposes the web-search and reasoning toggles for the current turn. |
+| `components/ingest-panel.js` | Drag-and-drop upload, streaming progress log, per-stage status indicators. |
+| `components/lint-panel.js` | Categorised lint findings with one-click auto-fix where safe. |
+| `components/dedup-panel.js` | Dry-run preview of cleanup_dedup merges; separate apply button. |
+| `components/graph-view.js` | Force-directed wikilink graph backed by `routers/wiki.py`'s adjacency endpoint. |
+| `lib/api.js` | Thin `fetch()` wrapper over `/api/*` with JSON error handling. The only place the frontend hits the backend. |
+| `lib/markdown.js` | Marked → DOMPurify pipeline. Explicit allowlist for `http:`/`https:`/`mailto:`/`tel:`. Output is handed to Lit's `unsafeHTML` only after sanitising. |
+| `lib/router.js` | Hash-based SPA router. Decouples panel selection from the server, so page refresh keeps state. |
+| `lib/icons.js` | Inline SVG icon set. No icon-font dependency. |
+
+### Load-bearing design choices
+
+Three design decisions bind this container together:
+
+1. **No new persistence layer.** The routers hold no mutable state. They re-enter `scripts/*` for every request; all state lives in the existing Obsidian vault and the `db/` side-state container. Re-reading the disk per request is cheap compared to the LLM call a request almost always ends in, and it eliminates the cache-coherence class of bugs between the CLI and the web UI.
+2. **Strict CSP, no inline scripts, sanitised Markdown.** `app.py` sets `script-src 'self'`, no `'unsafe-inline'`. The Vite build emits hashed bundle entrypoints; every `<script>` tag in the built `index.html` loads from `self`. Markdown is rendered via Marked then sanitised by DOMPurify with an explicit scheme allowlist before Lit's `unsafeHTML` inserts it into the DOM. This is defence-in-depth on top of the localhost-only bind.
+3. **Path-containment on every endpoint that takes a page name.** `routers/wiki.py` and `routers/admin.py` always call `Path.resolve()` on user-supplied paths and verify `relative_to(WIKI_DIR)` before touching the filesystem, matching the same discipline `llm_client.safe_filename()` enforces in the CLI. The SPA fallback in `app.py` applies the same `relative_to(_FRONTEND_ROOT)` check against the static dist directory.
+
+The container is optional by design: deleting `web/` does not change any behaviour under `scripts/`. This is what keeps the privacy posture of [Q1](../arc42/01-introduction-and-goals.md#12-quality-goals) intact, neither `fastapi` nor `ddgs` is on the code path that runs during a pure-CLI ingest.
+
+---
+
 ## Cross-component invariants
 
 These are the invariants that bind the components above together. Violating any of them is a bug.
@@ -367,15 +493,19 @@ These are the invariants that bind the components above together. Violating any 
 4. **The FTS5 index is rebuilt at the end of every `ingest.py` run.** A stale index is treated as a bug, not as "eventual consistency". Verified by the last line of the write layer being `WikiSearch(...).build_index()`.
 5. **On uncertainty, every stage forks rather than merges.** The default branch of every stage function returns `fork`, never `merge`. Verified by code review and by `test_resolver_scenarios.py` covering borderline cases.
 6. **The `source_files` reverse-index table is always consulted for idempotency.** On re-ingest, `find_source_page()` must be called before `_write_source_page()`; otherwise the source gets a new filename on every run and stale duplicates accumulate.
+7. **`scripts/` never imports from `web/`.** The CLI must run with `web/` absent. Verified by `grep -rn "from web" scripts/` returning no matches. Imports only flow the other way: `web/api/services.py` adds `scripts/` to `sys.path` and re-exports from it.
+8. **All wiki-writing endpoints resolve paths and call `relative_to(WIKI_DIR)` before any filesystem operation.** Path parameters are untrusted input. Verified by `grep -n "relative_to" web/api/routers/*.py` covering every `open(...)`, `unlink()`, `rename()` or `write_text()` call site on a user-supplied path. The SPA fallback in `web/api/app.py` applies the same check against `_FRONTEND_ROOT`.
+9. **The web UI binds to `127.0.0.1` by default and sets a strict CSP on every response.** `script-src 'self'` with no `'unsafe-inline'`; Markdown goes through DOMPurify before Lit's `unsafeHTML` inserts it. Verified by reading `_CSP` in `web/api/app.py` and by the `allow_origins` list excluding any non-loopback host.
+10. **The `ddgs` outbound edge is opt-in per request.** `routers/query.py` only reaches `ddgs` when `ChatRequest.web_search=true`. The default is `false`, keeping the privacy-posture invariant from [Q1](../arc42/01-introduction-and-goals.md#12-quality-goals) mechanically checkable.
 
-Invariants 1-6 are the mechanical expression of the architectural decisions in [ADR-001 through ADR-007](../arc42/09-architecture-decisions.md).
+Invariants 1-10 are the mechanical expression of the architectural decisions in [ADR-001 through ADR-007](../arc42/09-architecture-decisions.md).
 
 ---
 
 ## Where to go next
 
 - **[C4 Level 1, System Context](L1-system-context.md)**, zoom out two levels.
-- **[C4 Level 2, Container view](L2-container.md)**, zoom out one level to see how these components fit inside the CLI scripts container.
+- **[C4 Level 2, Container view](L2-container.md)**, zoom out one level to see how these components fit inside the CLI scripts and Web UI containers.
 - **[arc42 § 5, Building Block View](../arc42/05-building-block-view.md)**, the same decomposition with discussion of the design axes (write/read split, pure functions vs. stateful classes, stdlib-first).
 - **[arc42 § 6, Runtime View](../arc42/06-runtime-view.md)**, dynamic sequences that cross these components: ingestion, query, resolver stages 0-5, context-overflow recovery.
 - **[arc42 § 9, Architecture Decisions](../arc42/09-architecture-decisions.md)**, the ADRs that justify the component boundaries drawn here.

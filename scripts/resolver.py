@@ -107,6 +107,88 @@ MIN_POSITIVES = 5
 # sources are >= 10 years apart, fork without calling the llm.
 AGE_GAP_YEARS = 10
 
+# minimum word count for a description to be considered "thick" enough to
+# discriminate identity. below this, the description is almost certainly a
+# --- type equivalence groups. ---
+#
+# llms classify the same entity under different type labels across runs:
+# a newspaper might be "publication" in one source and "organization" in
+# another. stage 2 forks on type mismatch, which creates false duplicates
+# when the types are semantically compatible.
+#
+# these groups define sets of types that are too close to distinguish
+# reliably. when both types fall in the same group, stage 2 treats them
+# as compatible (no mismatch). types NOT in any group are left to the
+# existing similarity pipeline.
+#
+# this is a type taxonomy, not an entity list — it handles every entity
+# of a given type class, not just specific proper nouns.
+_TYPE_COMPAT_GROUPS: tuple[frozenset[str], ...] = (
+    # media / publishing / organizational entities
+    frozenset({
+        "organization", "company", "business", "corporation", "institution",
+        "publisher", "publication", "newspaper", "media", "news organization",
+        "news outlet", "journal", "magazine", "news source", "news agency",
+    }),
+    # people
+    frozenset({
+        "person", "researcher", "author", "scientist", "developer",
+        "professor", "academic", "writer", "founder", "engineer",
+        "executive", "ceo", "inventor", "journalist", "analyst",
+    }),
+    # ml models
+    frozenset({
+        "model", "language model", "llm", "ai model", "neural network",
+        "chatbot", "ai assistant", "ai system", "foundation model",
+    }),
+    # software / tools
+    frozenset({
+        "framework", "library", "tool", "software", "product", "platform",
+        "service", "application", "app", "toolkit", "sdk", "api",
+    }),
+    # methods / techniques
+    frozenset({
+        "method", "technique", "algorithm", "approach", "procedure",
+        "strategy", "protocol", "heuristic",
+    }),
+    # concepts / theory
+    frozenset({
+        "theory", "concept", "principle", "idea", "hypothesis",
+        "paradigm", "pattern", "architecture", "design pattern",
+    }),
+    # data
+    frozenset({
+        "dataset", "benchmark", "corpus", "database", "index",
+        "knowledge base", "ontology",
+    }),
+    # metrics
+    frozenset({
+        "metric", "measure", "score", "evaluation", "criterion",
+        "indicator",
+    }),
+)
+
+
+def _types_compatible(type_a: str, type_b: str) -> bool:
+    """true if both types are in the same equivalence group.
+
+    types not found in any group are always incompatible with each other
+    (unless they're equal), so the existing fork logic handles them.
+    missing or empty types are always compatible — extraction sometimes
+    omits the type field and we don't want that to trigger a fork.
+    """
+    if not type_a or not type_b:
+        return True
+    a = type_a.strip().lower()
+    b = type_b.strip().lower()
+    if a == b:
+        return True
+    for group in _TYPE_COMPAT_GROUPS:
+        if a in group and b in group:
+            return True
+    return False
+
+
 JUDGE_CACHE_PATH = BASE_DIR / "db" / "judge_cache.json"
 EMBED_CACHE_PATH = BASE_DIR / "db" / "embed_cache.json"
 CALIBRATION_CACHE_PATH = BASE_DIR / "db" / "resolver_calibration.json"
@@ -691,6 +773,14 @@ _CONTEXT_LOCAL_PATTERNS = (
     re.compile(r"\bused\s+(?:in|as)\s+(?:the|a|an)\s+(?:context|example)\b", re.IGNORECASE),
     re.compile(r"\bappears?\s+in\s+(?:the|a|an)\b", re.IGNORECASE),
     re.compile(r"\bin\s+the\s+context\s+of\b", re.IGNORECASE),
+    # source-relative patterns: descriptions that reference a specific
+    # article, agreement, or newsletter rather than establishing identity.
+    re.compile(r"\breporting\s+on\s+(?:the|a|an)\b", re.IGNORECASE),
+    re.compile(r"\bpublisher\s+of\s+(?:the|a|an)\b", re.IGNORECASE),
+    re.compile(r"\bdiscussed\s+(?:in|at|during)\b", re.IGNORECASE),
+    re.compile(r"\bcited\s+(?:in|by|as)\b", re.IGNORECASE),
+    re.compile(r"\bquoted\s+(?:in|by)\b", re.IGNORECASE),
+    re.compile(r"\bfeatured\s+(?:in|on|at)\b", re.IGNORECASE),
 )
 
 
@@ -827,7 +917,9 @@ def resolve_item(
     # biological species across runs). only fork on type mismatch when
     # the descriptions also disagree — real polysems ("Python" snake vs
     # "Python" language) always have disjoint descriptions.
-    if new_type and existing_type and new_type != existing_type:
+    if (new_type and existing_type
+            and new_type != existing_type
+            and not _types_compatible(new_type, existing_type)):
         if sim < SIM_MERGE_THRESHOLD:
             return Resolution(
                 action="fork",
@@ -854,15 +946,33 @@ def resolve_item(
         )
 
     if sim < SIM_FORK_THRESHOLD:
-        return Resolution(
-            action="fork",
-            resolved_name=_fork_name(safe, new_type or "alt"),
-            original_name=name,
-            existing_path=existing_path,
-            similarity=sim,
-            reason=f"jaccard={sim:.2f} < {SIM_FORK_THRESHOLD}",
-            stage=3,
+        # context-local guard: when both descriptions are context-local
+        # ("publisher of the newsletter", "reporting on the agreement"),
+        # they describe the SOURCE, not the ENTITY. jaccard over such
+        # descriptions has no identity signal — two context-local fragments
+        # about the same entity can have zero overlap. skip the fork and
+        # fall through to stage 4 (llm judge) which can reason about the
+        # name itself.
+        #
+        # substantive descriptions ("cognitive process selecting sensory
+        # information" vs "hyperbolic embeddings for legal retrieval") ARE
+        # reliable for forking even when short, so we use context-local
+        # detection rather than a blunt word-count threshold.
+        both_context_local = (
+            _looks_context_local(new_desc, name)
+            and _looks_context_local(existing_desc, name)
         )
+        if not both_context_local:
+            return Resolution(
+                action="fork",
+                resolved_name=_fork_name(safe, new_type or "alt"),
+                original_name=name,
+                existing_path=existing_path,
+                similarity=sim,
+                reason=f"jaccard={sim:.2f} < {SIM_FORK_THRESHOLD}",
+                stage=3,
+            )
+        # both context-local — fall through to stage 4.
 
     # --- stage 3b: age-gap tiebreaker (hamilton et al. acl 2016). ---
     # borderline jaccard + >=10 year gap between sources -> fork without

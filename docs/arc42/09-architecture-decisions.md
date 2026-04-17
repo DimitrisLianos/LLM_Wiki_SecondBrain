@@ -8,7 +8,7 @@ Earlier sections reference these ADRs by their ID. The set below covers the five
 
 ---
 
-## ADR-001 — Zero external Python dependencies
+## ADR-001, Zero external Python dependencies
 
 - **Status:** Accepted
 - **Date:** 2026-04-07
@@ -55,7 +55,7 @@ No `pip install` is required. No `requirements.txt` exists. No `venv` is created
 
 - Cloning the repo is the install step. Nothing else.
 - Every import statement in the tree names a stdlib module. A reviewer can verify the closed-world property with `grep -R "^import\|^from" scripts/`.
-- SSRF, XXE, deserialisation and pickling attacks are absent-by-construction ([§ 11.1](11-risks-and-technical-debt.md#111-security-posture)).
+- SSRF, XXE, deserialisation and pickling attacks are absent-by-construction: no outbound network call, `xml.etree.ElementTree` does not expand external entities by default on Python 3.12, and no `pickle`/`marshal`/`shelve`/`yaml.unsafe_load` appears anywhere in the tree.
 - Python 3.12 has enough stdlib to cover the whole surface (FTS5 arrived in Python's bundled SQLite a few versions back and `concurrent.futures` has been stable for a decade).
 
 **Negative:**
@@ -71,7 +71,7 @@ No `pip install` is required. No `requirements.txt` exists. No `venv` is created
 
 ---
 
-## ADR-002 — Fork on uncertainty, never silently merge
+## ADR-002, Fork on uncertainty, never silently merge
 
 - **Status:** Accepted
 - **Date:** 2026-04-08
@@ -128,7 +128,7 @@ This is the opposite of a typical entity-linking system, which tries hard to mer
 
 ---
 
-## ADR-003 — FTS5 + wikilink graph + RRF over vector search
+## ADR-003, FTS5 + wikilink graph + RRF over vector search
 
 - **Status:** Accepted
 - **Date:** 2026-04-08
@@ -175,12 +175,12 @@ Specifically:
 
 - Retrieval is ~ 5 ms, no LLM call on the hot path.
 - One stdlib module (`sqlite3`) replaces what would otherwise be a separate server.
-- BM25 column weights are a dial the author can actually turn and measure.
+- BM25 column weights are a dial an operator can actually turn and measure.
 - The wikilink graph is used directly instead of approximated.
 
 **Negative:**
 
-- Semantically-similar-but-lexically-different queries are weaker than a dense retriever would be. The author has not yet seen a real query where this matters, but it is a known limitation.
+- Semantically-similar-but-lexically-different queries are weaker than a dense retriever would be. This has not yet been observed as a real-world blocker on the current corpus, but it is a known limitation.
 - FTS5 does not index on update automatically; the pipeline has to rebuild the index after every ingest. This takes < 1 s so it is free in practice, but it is a discipline point.
 - No multilingual magic; the FTS5 Porter stemmer is English-specific. Greek sources are indexed, but Greek→English lexical matching is not automatic. (Stage 5 embeddings with bge-m3 handle cross-lingual entity matching inside the resolver; query-time cross-lingual retrieval is a known gap.)
 
@@ -193,7 +193,7 @@ Specifically:
 
 ---
 
-## ADR-004 — TurboQuant turbo4 V only, q8_0 K
+## ADR-004, TurboQuant turbo4 V only, q8_0 K
 
 - **Status:** Accepted
 - **Date:** 2026-04-09
@@ -259,7 +259,7 @@ KV_TYPE_V="turbo4" # TurboQuant 4-bit values (3,8x compression)
 
 ---
 
-## ADR-005 — Six-stage entity resolver with gazetteer anchor
+## ADR-005, Six-stage entity resolver with gazetteer anchor
 
 - **Status:** Accepted
 - **Date:** 2026-04-10
@@ -316,7 +316,7 @@ Seed tier entries are curated by hand and committed to git under review. Runtime
 
 ---
 
-## ADR-006 — F1-optimal threshold tuning with hard sample-count gates
+## ADR-006, F1-optimal threshold tuning with hard sample-count gates
 
 - **Status:** Accepted
 - **Date:** 2026-04-11
@@ -369,7 +369,7 @@ If any gate fails, stage 5 uses the static `DEFAULT_EMBED_THRESHOLD = 0.75`. The
 
 ---
 
-## ADR-007 — Reverse-index (`source_files`) for idempotent re-ingestion
+## ADR-007, Reverse-index (`source_files`) for idempotent re-ingestion
 
 - **Status:** Accepted
 - **Date:** 2026-04-09

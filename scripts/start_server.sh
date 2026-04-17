@@ -29,10 +29,16 @@ PORT=8080
 CONTEXT=65536        # total context split across parallel slots.
 PARALLEL=2           # concurrent request slots (2 × 32k each).
 GPU_LAYERS=999
-THREADS=$(sysctl -n hw.performancecores 2>/dev/null || echo 8)
-BATCH=4096           # prompt processing batch size. higher = faster prefill.
+# thread count: prefer a pre-set env var, fall back to macos performance-core
+# count, then to a safe default. override via `THREADS=16 bash scripts/start_server.sh`
+# on linux/wsl where sysctl is unavailable.
+THREADS="${THREADS:-$(sysctl -n hw.performancecores 2>/dev/null || echo 8)}"
+BATCH=2048           # prompt processing batch size. reduced from 4096 to fit Metal working set with embedding server.
 KV_TYPE_K="q8_0"          # full precision keys (attention routing).
 KV_TYPE_V="turbo4"        # turboquant 4-bit values (3.8x compression).
+REASONING="on"            # gemma 4 <think> mode: "on" (chat quality) or "off" (ingest quality).
+                          # ingest burns the token budget on thinking, leaving entities as empty titles;
+                          # turn REASONING off before ingesting, or let the ui do it for you.
 
 case "${1:-start}" in
     start)
@@ -57,6 +63,7 @@ case "${1:-start}" in
         echo "│  Context:  ${CONTEXT} tokens (${PARALLEL} slots)            │"
         echo "│  GPU:      Metal (all layers)                  │"
         echo "│  KV:       ${KV_TYPE_K} K / ${KV_TYPE_V} V (TurboQuant)      │"
+        echo "│  Reasoning: ${REASONING}                              │"
         echo "│  Runtime:  llama-cpp-turboquant fork            │"
         echo "│  Threads:  ${THREADS} (performance cores)           │"
         echo "│  Batch:    ${BATCH}                               │"
@@ -66,8 +73,24 @@ case "${1:-start}" in
         echo "Loading model (~30s for 16GB)... Ctrl+C to abort."
         echo ""
 
+        # reasoning mode: gemma 4's <think> pre-answer. ON improves chat quality;
+        # OFF is required for ingestion (prevents the model from burning its
+        # output budget on reasoning before emitting the entity extraction json).
+        #
+        # we implement "off" two ways for robustness across llama.cpp builds:
+        #   1. --reasoning-budget 0           (newer llama.cpp: hard cap)
+        #   2. --chat-template-kwargs '{"enable_thinking": false}' (works with
+        #      any template that honours the enable_thinking hint)
+        # only one is needed; having both is harmless.
+        REASONING_ARGS=()
+        if [ "$REASONING" = "off" ]; then
+            REASONING_ARGS+=(--reasoning-budget 0)
+            REASONING_ARGS+=(--chat-template-kwargs '{"enable_thinking": false}')
+        fi
+
         "$LLAMA_SERVER" \
             --model "$MODEL" \
+            --alias "gemma-4" \
             --host "$HOST" \
             --port "$PORT" \
             --ctx-size "$CONTEXT" \
@@ -78,7 +101,7 @@ case "${1:-start}" in
             --flash-attn on \
             --cache-type-k "$KV_TYPE_K" \
             --cache-type-v "$KV_TYPE_V" \
-            --reasoning off
+            "${REASONING_ARGS[@]}"
         ;;
 
     stop)

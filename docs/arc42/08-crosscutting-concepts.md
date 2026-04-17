@@ -126,7 +126,7 @@ graph LR
 - **Zero-install, stdlib-native.** `sqlite3` is part of Python's standard library, satisfying [TC-1](02-architecture-constraints.md#21-technical-constraints).
 - **FTS5 is a first-class feature.** Full-text search with BM25 ranking, tokenisation and column weights is built in, with no extra extension to load.
 - **Single-file durability.** The entire index is one file. Corruption recovery is trivial (delete and rebuild).
-- **Parameterised queries are idiomatic.** Every SQL statement in `search.py` uses `?` placeholders, eliminating SQL injection as an attack class ([§ 11.1, Verified Safe](11-risks-and-technical-debt.md#111-security-posture)).
+- **Parameterised queries are idiomatic.** Every SQL statement in `search.py` uses `?` placeholders, eliminating SQL injection as an attack class.
 
 ### Why not a vector database
 
@@ -170,7 +170,7 @@ No stack trace on routine failures; a stack trace only on genuinely unexpected c
 
 ## 8.4 Security
 
-Covered in detail in [§ 11.1](11-risks-and-technical-debt.md#111-security-posture), this subsection is the cross-cutting summary.
+The security posture is a cross-cutting concern that falls out of the architectural choices elsewhere in this document: single-user deployment ([OC-1](02-architecture-constraints.md#22-organizational-constraints)), zero external dependencies ([ADR-001](09-architecture-decisions.md#adr-001--zero-external-python-dependencies)), stdlib-only data path ([TC-1](02-architecture-constraints.md#21-technical-constraints)) and loopback-only network binding ([§ 7.2](07-deployment-view.md#72-network-topology)). The concrete design properties are enumerated in the [README "Security and privacy posture"](../../README.md#security-and-privacy-posture) section; this subsection is the cross-cutting summary.
 
 ### Attack surface
 
@@ -183,17 +183,7 @@ Covered in detail in [§ 11.1](11-risks-and-technical-debt.md#111-security-postu
 | User input to filesystem | `llm_client.safe_filename()` strips `..`, path separators and control characters. Page writes always go under `WIKI_DIR`. |
 | XML parsing | `xml.etree.ElementTree`, does not expand external entities by default in Python 3.12, so XXE is not reachable on the SMS XML path. |
 | LLM output to filesystem | Filenames from LLM output are always passed through `safe_filename()` before becoming a path. |
-| Secrets in git | None, per [OC-4](02-architecture-constraints.md#22-organizational-constraints) and the [PII audit](11-risks-and-technical-debt.md#112-pii-and-privacy-audit). |
-
-### Findings from the audit
-
-Seven findings were recorded in the forensic security audit ([§ 11.1](11-risks-and-technical-debt.md#111-security-posture)):
-
-- **2 MEDIUM**, log files written under `scripts/` by an earlier version of `watch.sh` (now redirected) and a path-containment check that happens after `pdftotext` argv assembly (no actual vulnerability because the containment check is before the subprocess invocation, but the order was confusing).
-- **2 LOW**, `127.0.0.1` binding trust assumption (correct but worth documenting) and a deprecated exception class in one place.
-- **2 INFO**, alignment suggestions for error messages.
-
-Zero CRITICAL, zero HIGH. The attack surface is small enough that the findings are about hygiene, not vulnerabilities.
+| Secrets in git | None, per [OC-4](02-architecture-constraints.md#22-organizational-constraints). The `.gitignore` rules covering personal content are described in [§ 7.4](07-deployment-view.md#74-repository-hygiene-and-rebuildable-state). |
 
 ### What a malicious source file can and cannot do
 
@@ -303,7 +293,7 @@ The "zero external Python dependencies" rule ([TC-1](02-architecture-constraints
 | `watchdog` for filesystem watching | `fswatch` via `watch.sh` |
 | `rich` / `click` for CLI | Plain `argparse` and plain `print()` |
 
-The operational benefit: any MacBook with `python3 --version ≥ 3.12` can run the entire system, *today*, with no environment setup, no wheel cache, no interpreter version mismatch and no dependency-resolution failure. The cost is that some re-implementation (the tolerant JSON parser, the YAML reader, the stemmed Jaccard) lives in this repo that would otherwise live in `pip install`. The cost is explicit and bounded; the benefit compounds with every reader who can audit and run the system in 60 seconds.
+The operational benefit: any MacBook with `python3 --version ≥ 3.12` can run the entire system, *today*, with no environment setup, no wheel cache, no interpreter version mismatch and no dependency-resolution failure. The cost is that some re-implementation (the tolerant JSON parser, the YAML reader, the stemmed Jaccard) lives in this repo that would otherwise live in `pip install`. The cost is explicit and bounded; the benefit compounds with every reader who can inspect and run the system in 60 seconds.
 
 ---
 

@@ -124,7 +124,7 @@
 
 **PDF extraction.** Delegated to `pdftotext` (Poppler) via a subprocess. No Python PDF library is used, per [TC-1](02-architecture-constraints.md#21-technical-constraints). See [section 3.2](03-system-scope-and-context.md#32-technical-context--c4-level-1-system-context).
 
-**PII.** Personally Identifiable Information. Audited in [section 11.2](11-risks-and-technical-debt.md#112-pii-and-privacy-audit).
+**PII.** Personally Identifiable Information. The `.gitignore` rules covering personal content (`obsidian_vault/raw/`, generated wiki subfolders, `db/`, logs, `models/`) are described in [§ 7.4 (Repository hygiene)](07-deployment-view.md#74-repository-hygiene-and-rebuildable-state).
 
 **Poppler.** A PDF rendering library; `pdftotext` and `pdfinfo` are its command-line utilities. Installed via `brew install poppler` on macOS.
 
@@ -208,7 +208,7 @@
 
 ## X
 
-**XXE, XML External Entity.** An attack class where XML parsers expand external entities from a URL. Not reachable in this project because `xml.etree.ElementTree` in Python 3.12 does not expand external entities by default. See [section 11.1, Verified Safe #3](11-risks-and-technical-debt.md#111-security-posture).
+**XXE, XML External Entity.** An attack class where XML parsers expand external entities from a URL. Not reachable in this project because `xml.etree.ElementTree` in Python 3.12 does not expand external entities by default.
 
 ## Y
 

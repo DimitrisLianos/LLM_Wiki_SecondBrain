@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecondBrain — Local LLM Wiki</title>
+  <meta name="description" content="Personal knowledge base maintained by a local LLM. No cloud, fully offline." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
+  />
+  <!-- no manual modulepreload: vite auto-emits one for the real chunk
+       during build. a hand-written <link rel="modulepreload" href="/src/main.js">
+       gets inlined as a data: URI by vite (since main.js is bundled, not
+       served as-is), which is correctly blocked by our CSP. -->
+</head>
+<body>
+  <div id="app">
+    <app-shell></app-shell>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

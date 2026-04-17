@@ -1,0 +1,84 @@
+/* design tokens — dark luxury / editorial research journal. */
+
+:root {
+  /* --- palette. --- */
+  --bg-deep:       oklch(12% 0.02 260);
+  --bg-surface:    oklch(17% 0.015 260);
+  --bg-card:       oklch(21% 0.015 260);
+  --bg-card-hover: oklch(25% 0.02 260);
+  --bg-input:      oklch(15% 0.015 260);
+
+  --text-primary:   oklch(92% 0.01 80);
+  --text-secondary: oklch(68% 0.01 260);
+  --text-muted:     oklch(50% 0.01 260);
+
+  --accent:         oklch(75% 0.15 70);    /* amber-gold. */
+  --accent-hover:   oklch(80% 0.17 70);
+  --accent-dim:     oklch(55% 0.10 70);
+
+  --link:           oklch(72% 0.12 250);   /* soft blue for wikilinks. */
+  --link-hover:     oklch(80% 0.14 250);
+
+  --success:        oklch(70% 0.12 165);
+  --warning:        oklch(75% 0.14 70);
+  --error:          oklch(65% 0.15 25);
+  --info:           oklch(70% 0.10 250);
+
+  --border:         oklch(28% 0.015 260);
+  --border-light:   oklch(35% 0.015 260);
+
+  /* --- subdir colors for badges & graph. --- */
+  --color-sources:   oklch(70% 0.12 250);
+  --color-entities:  oklch(70% 0.14 165);
+  --color-concepts:  oklch(72% 0.12 300);
+  --color-synthesis: oklch(75% 0.14 70);
+
+  /* --- typography. --- */
+  --font-heading: "Playfair Display", "Georgia", serif;
+  --font-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", "SF Mono", "Consolas", monospace;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  clamp(1.875rem, 1.5rem + 1.5vw, 2.25rem);
+  --text-4xl:  clamp(2.25rem, 1.8rem + 2vw, 3rem);
+
+  /* --- spacing (fibonacci-adjacent). --- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* --- radii. --- */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+
+  /* --- shadows. --- */
+  --shadow-sm:  0 1px 3px oklch(0% 0 0 / 0.3);
+  --shadow-md:  0 4px 12px oklch(0% 0 0 / 0.4);
+  --shadow-lg:  0 8px 24px oklch(0% 0 0 / 0.5);
+  --shadow-glow: 0 0 20px oklch(75% 0.15 70 / 0.15);
+
+  /* --- transitions. --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+
+  /* --- layout. --- */
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 64px;
+  --header-height: 56px;
+}

@@ -30,7 +30,7 @@ The three dominant quality attributes, in priority order:
 
 | Priority | Quality | Scenario | Target |
 |---|---|---|---|
-| 1 | **Privacy / data sovereignty** | The user ingests private notes, personal archives, or confidential work documents. No byte of source text or derived wiki content is transmitted to any external service, ever. | 0 outbound connections to any host other than `127.0.0.1`. Verified by the [security audit](11-risks-and-technical-debt.md#111-security-posture). |
+| 1 | **Privacy / data sovereignty** | The operator ingests private notes, personal archives, or confidential work documents. No byte of source text or derived wiki content is transmitted to any external service, ever. | 0 outbound connections to any host other than `127.0.0.1`. `scripts/` contains no `urlopen`, `requests`, or `httpx` call. |
 | 2 | **Reproducibility** | A fresh clone on a fresh machine runs end-to-end with only the Python standard library plus `pdftotext` (Poppler) plus a locally-downloaded GGUF model. | `pyproject.toml` declares `dependencies = []`. No `pip install`, no virtualenv, no `requirements.txt`. |
 | 3 | **Retrieval quality under zero dependencies** | Retrieval must be fast and accurate enough to beat the LLM-based page-selection approach we started with, using only what ships with CPython. | < 10 ms page selection via [SQLite FTS5](https://www.sqlite.org/fts5.html), BM25 ranking, wikilink graph expansion and [Reciprocal Rank Fusion](https://dl.acm.org/doi/10.1145/1571941.1572114) (Cormack et al. SIGIR 2009). |
 
@@ -42,12 +42,12 @@ These priorities inform every architectural choice in this document. When privac
 
 | Role | Concern | Expectation from this documentation |
 |------|---------|-------------------------------------|
-| **The author** | The system must produce a useful personal knowledge base from the author's own documents without leaking any of it. | Architecture decisions must be traceable back to observed failures in real use. |
+| **The operator** | The system must produce a useful personal knowledge base from private documents without leaking any of it. | Architecture decisions must be traceable back to observed failures in real use. |
 | **The academic reader** | The project is offered as a case study in how the 2026 open-weights stack (Gemma 4, Unsloth Dynamic, TurboQuant, llama.cpp) composes into something usable on a single laptop. | Citations must resolve to real papers and real repositories. Claims must be falsifiable. |
 | **The re-user / forker** | Someone wants to build the same thing for their own corpus and needs to know what works, what does not and what they will inherit as technical debt. | The retrospective ([Appendix A](appendix-a-academic-retrospective.md)) must be honest about the things that failed. |
-| **The security reviewer** | The project advertises "fully local" as a security posture. This claim must survive scrutiny. | [Section 11](11-risks-and-technical-debt.md) documents the full security audit, findings and residual risk. |
+| **The security reviewer** | The project advertises "fully local" as a security posture. This claim must survive scrutiny. | The [README "Security and privacy posture"](../../README.md#security-and-privacy-posture) section enumerates the concrete design properties (no outbound network, loopback-only binding, parameterised SQL, path-containment, list-form subprocess calls, web-UI CSP) that back the claim. |
 | **The Obsidian community** | Users expect the wiki output to look native inside Obsidian, graph view, backlinks, Dataview, the usual. | The page format (YAML frontmatter + `[[wikilinks]]`) is specified in [`CLAUDE.md`](../../CLAUDE.md) and enforced by `scripts/lint.py`. |
-| **Karpathy's original description** | This is a concrete implementation of a pattern he sketched. The architecture gist describes *what* to build; this document is one answer to *how*. | [Section 3 (System Context)](03-system-scope-and-context.md) explicitly maps our design back to his gist, point by point. |
+| **Karpathy's original description** | This is a concrete implementation of a pattern he sketched. The architecture gist describes *what* to build; this document is one answer to *how*. | [Section 3 (System Context)](03-system-scope-and-context.md) explicitly maps the design back to that gist, point by point. |
 
 ---
 

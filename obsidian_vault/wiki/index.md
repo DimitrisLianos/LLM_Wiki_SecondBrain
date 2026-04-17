@@ -1,14 +1,3 @@
----
-type: index
-updated: 2026-04-12
----
+# Index
 
-# Wiki Index
-
-## Sources
-
-## Entities
-
-## Concepts
-
-## Synthesis
+_Wiki index will appear here as you ingest sources._

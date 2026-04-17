@@ -76,11 +76,11 @@ graph TB
 
 ## 10.2 Quality Scenarios
 
-Each scenario follows the format: **Stimulus → Environment → Response → Response measure**. The "Verified by" column names the test file, inspection command, or audit section that demonstrates the scenario holds.
+Each scenario follows the format: **Stimulus → Environment → Response → Response measure**. The "Verified by" column names the test file, inspection command, or reference section that demonstrates the scenario holds.
 
-### P1 — Privacy / data sovereignty
+### P1, Privacy / data sovereignty
 
-#### QS-1 — No outbound network connections at runtime
+#### QS-1, No outbound network connections at runtime
 
 | Field | Value |
 |---|---|
@@ -89,9 +89,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Environment** | Normal runtime; server started; LAN may or may not be connected |
 | **Response** | Zero HTTP calls leave the loopback interface. All LLM calls go to `127.0.0.1:8080`; all embedding calls go to `127.0.0.1:8081`. |
 | **Measure** | Exactly 2 URL constants in the tree: `LLAMA_URL = "http://127.0.0.1:8080"` and `EMBED_URL = "http://127.0.0.1:8081"`, both in [`scripts/llm_client.py`](../../scripts/llm_client.py) lines 19-20. No user-overridable URL anywhere. |
-| **Verified by** | `grep -R "https://" scripts/` returns only documentation strings and docstrings. `grep -R "urlopen" scripts/` shows only calls built from `LLAMA_URL` or `EMBED_URL`. [§ 11.1 (Security posture)](11-risks-and-technical-debt.md#111-security-posture) independently verifies this. |
+| **Verified by** | `grep -R "https://" scripts/` returns only documentation strings and docstrings. `grep -R "urlopen" scripts/` shows only calls built from `LLAMA_URL` or `EMBED_URL`. The [README "Security and privacy posture"](../../README.md#security-and-privacy-posture) enumerates the same property as a static design property of the tree. |
 
-#### QS-2 — No secrets committed to git
+#### QS-2, No secrets committed to git
 
 | Field | Value |
 |---|---|
@@ -100,9 +100,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Environment** | Git history over all branches |
 | **Response** | No API keys, tokens, passwords, private keys, or cloud credentials appear in any committed file. |
 | **Measure** | [`git log -p`](https://git-scm.com/docs/git-log#Documentation/git-log.txt--p) scan for `AKIA`, `sk-`, `ghp_`, `-----BEGIN.*PRIVATE KEY-----`, `password=`, `api_key=` returns no matches. |
-| **Verified by** | [§ 11.2 (PII and privacy audit)](11-risks-and-technical-debt.md#112-pii-and-privacy-audit) covers both the current tree and the history. |
+| **Verified by** | `.gitignore` excludes `obsidian_vault/raw/**`, the generated wiki subfolders, `db/**`, `models/**`, logs, and `.env` / `.env.*`. `pyproject.toml` declares `dependencies = []`, so there is no credentialled package registry in play. |
 
-#### QS-3 — No telemetry, no crash reporting, no update checks
+#### QS-3, No telemetry, no crash reporting, no update checks
 
 | Field | Value |
 |---|---|
@@ -113,9 +113,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | `grep -R "sentry\|bugsnag\|rollbar\|analytics\|telemetry" scripts/` returns nothing. `llm_client.llm()` on failure prints to stdout and re-raises locally. |
 | **Verified by** | Code inspection; [§ 8.8 (Observability)](08-crosscutting-concepts.md#88-observability). |
 
-### P2 — Reproducibility
+### P2, Reproducibility
 
-#### QS-4 — Zero-install setup
+#### QS-4, Zero-install setup
 
 | Field | Value |
 |---|---|
@@ -126,7 +126,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | `pyproject.toml` declares `dependencies = []`. `python3 scripts/ingest.py --help` runs on a system with no site-packages and succeeds. |
 | **Verified by** | `pyproject.toml` inspection; manual run on a scratch user account. |
 
-#### QS-5 — Derived state is fully rebuildable
+#### QS-5, Derived state is fully rebuildable
 
 | Field | Value |
 |---|---|
@@ -137,7 +137,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | Every file in the gitignored set has a documented recovery command in [§ 7.4](07-deployment-view.md#74-repository-hygiene-and-rebuildable-state). |
 | **Verified by** | Manual rebuild; `git status` is clean after recovery. |
 
-#### QS-6 — Same input produces same output (modulo LLM temperature)
+#### QS-6, Same input produces same output (modulo LLM temperature)
 
 | Field | Value |
 |---|---|
@@ -148,9 +148,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | `WikiSearch.find_source_page(filename)` returns the existing stem; the source page on disk is rewritten, not appended. Entity and concept pages either no-op or merge via the resolver. |
 | **Verified by** | `scripts/test_ingest_dedup.py` and [ADR-007](09-architecture-decisions.md#adr-007--reverse-index-source_files-for-idempotent-re-ingestion). |
 
-### P3 — Retrieval quality
+### P3, Retrieval quality
 
-#### QS-7 — Retrieval latency below 10 ms
+#### QS-7, Retrieval latency below 10 ms
 
 | Field | Value |
 |---|---|
@@ -161,18 +161,18 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | ≤ 10 ms wall-clock for retrieval. The breakdown in [§ 6.3](06-runtime-view.md#63-query-pipeline) shows FTS5 ≈ 2 ms, graph BFS ≈ 1 ms, RRF < 1 ms, file reads ≈ 5 ms. |
 | **Verified by** | `python3 scripts/query.py` with `--profile` flag (planned, currently timed by hand via `time`). |
 
-#### QS-8 — The relevant page appears in the top-5 retrieval hits
+#### QS-8, The relevant page appears in the top-5 retrieval hits
 
 | Field | Value |
 |---|---|
 | **Source** | Quality Goal Q3 |
 | **Stimulus** | Any of a curated set of test queries |
-| **Environment** | Wiki built from the author's real corpus |
+| **Environment** | Wiki built from a representative real corpus |
 | **Response** | For ≥ 90 % of curated test queries, at least one of the top-5 retrieved pages is a correct primary source for the question. |
 | **Measure** | Relevance-at-5 on a manual test set of 30 queries. |
-| **Verified by** | Manual audit; no automated relevance test exists yet. This is listed as a known gap in [§ 11.3, L-1](11-risks-and-technical-debt.md#113-known-limitations). |
+| **Verified by** | Manual inspection; no automated relevance test exists yet. This is listed as a known gap in [§ 11.1, L-1](11-risks-and-technical-debt.md#l-1--no-automated-relevance-evaluation). |
 
-#### QS-9 — Answers cite real wiki pages via `[[wikilinks]]`
+#### QS-9, Answers cite real wiki pages via `[[wikilinks]]`
 
 | Field | Value |
 |---|---|
@@ -185,18 +185,18 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 
 ### Operational efficiency
 
-#### QS-10 — Ingest a 1 MB PDF in under 5 minutes
+#### QS-10, Ingest a 1 MB PDF in under 5 minutes
 
 | Field | Value |
 |---|---|
 | **Source** | User experience target |
 | **Stimulus** | `python3 scripts/ingest.py article.pdf` on a ≈ 1 MB text-extracted PDF |
-| **Environment** | M5 MacBook, 32 GB RAM, llama-server running, 2 parallel slots |
+| **Environment** | Reference Apple Silicon MacBook, 32 GB unified memory, llama-server running, 2 parallel slots |
 | **Response** | The pipeline completes ingestion in ≤ 5 minutes (2-4 minutes typical). |
 | **Measure** | Wall-clock time from invocation to "wrote N + M + K pages". |
 | **Verified by** | Manual measurement; observed on real author corpus. |
 
-#### QS-11 — Query answer within 10 seconds
+#### QS-11, Query answer within 10 seconds
 
 | Field | Value |
 |---|---|
@@ -207,20 +207,20 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | Wall-clock time. Retrieval is ~ 10 ms; the remainder is the LLM synthesis. |
 | **Verified by** | Manual measurement. |
 
-#### QS-12 — Memory footprint fits a 32 GB machine with headroom
+#### QS-12, Memory footprint fits a 32 GB machine with headroom
 
 | Field | Value |
 |---|---|
 | **Source** | Quality Goal Q1 (the hardware constraint) |
 | **Stimulus** | Server running, ingest in progress, Obsidian open, terminal open |
-| **Environment** | M5 MacBook, 32 GB unified memory |
+| **Environment** | Reference Apple Silicon MacBook, 32 GB unified memory |
 | **Response** | The system remains responsive without swapping. |
 | **Measure** | Resident set size ≤ 24 GB combined (model + KV + Python + Obsidian + macOS baseline), leaving ≥ 8 GB for burst headroom. |
 | **Verified by** | `vm_stat` and Activity Monitor during ingest. See [§ 7.2 (Memory budget)](07-deployment-view.md#72-memory-budget). |
 
 ### Maintainability
 
-#### QS-13 — All source files stay under 800 lines
+#### QS-13, All source files stay under 800 lines
 
 | Field | Value |
 |---|---|
@@ -231,18 +231,18 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | `wc -l scripts/*.py`. The two exceptions are called out in [section 5.2](05-building-block-view.md#52-whitebox-ingestpy--c4-level-3-component-view) and [section 5.4](05-building-block-view.md#54-whitebox-resolverpy--the-entity-resolution-pipeline) with their internal decomposition. |
 | **Verified by** | `wc -l scripts/*.py` + manual review. |
 
-#### QS-14 — The whole codebase can be re-read by one human in under 3 hours
+#### QS-14, The whole codebase can be re-read by one human in under 3 hours
 
 | Field | Value |
 |---|---|
-| **Source** | Quality Goal Q2 (reproducibility includes auditability) |
+| **Source** | Quality Goal Q2 (reproducibility includes inspectability) |
 | **Stimulus** | A new reader picks up the repo |
 | **Environment** | No prior context |
 | **Response** | The reader can understand the architecture, run the system and modify a component within one sitting. |
 | **Measure** | Total Python line count ≤ 6 000; every module under 1 000 lines (exceptions documented); `docs/arc42/` provides the top-down guide; `CLAUDE.md` is the agent-facing summary. |
 | **Verified by** | `wc -l scripts/*.py docs/**/*.md` and self-review. |
 
-#### QS-15 — The entity resolver has full scenario coverage
+#### QS-15, The entity resolver has full scenario coverage
 
 | Field | Value |
 |---|---|
@@ -255,7 +255,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 
 ### Security
 
-#### QS-16 — All SQL uses parameterised queries
+#### QS-16, All SQL uses parameterised queries
 
 | Field | Value |
 |---|---|
@@ -264,9 +264,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Environment** | `search.py`, `ingest.py`, `query.py` |
 | **Response** | Every `cursor.execute` call uses `?` placeholders. No string concatenation into SQL. |
 | **Measure** | `grep -R "execute(" scripts/` inspection confirms. Column weights in `bm25(pages_fts, 10, 3, 5, 1)` are passed as literals, not as user input. |
-| **Verified by** | [§ 11.1 (Security posture), Verified Safe](11-risks-and-technical-debt.md#111-security-posture). |
+| **Verified by** | Static inspection of `search.py`, `ingest.py`, `query.py`; every `cursor.execute` call uses `?` placeholders. |
 
-#### QS-17 — Path containment on `raw/` access
+#### QS-17, Path containment on `raw/` access
 
 | Field | Value |
 |---|---|
@@ -275,9 +275,9 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Environment** | Argument may be absolute, relative, or contain `..` |
 | **Response** | The resolved absolute path is checked for containment under `RAW_DIR`. If not contained, the ingest aborts. |
 | **Measure** | `Path(filename).resolve().is_relative_to(RAW_DIR.resolve())` check in `ingest.py` before any file read. |
-| **Verified by** | Code inspection; [§ 11.1 (SEC-2)](11-risks-and-technical-debt.md#111-security-posture). |
+| **Verified by** | Code inspection of `ingest.py`: the containment check runs before any file read or subprocess invocation. |
 
-#### QS-18 — No shell injection in `subprocess.run`
+#### QS-18, No shell injection in `subprocess.run`
 
 | Field | Value |
 |---|---|
@@ -286,11 +286,11 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Environment** | Filename may contain spaces, quotes, or shell metacharacters |
 | **Response** | `subprocess.run` is called with a list of arguments (`shell=False`). No shell interpolation. |
 | **Measure** | `grep -R "subprocess.run\|subprocess.Popen" scripts/` shows every call uses the list form. |
-| **Verified by** | [§ 11.1, Verified Safe #2](11-risks-and-technical-debt.md#111-security-posture). |
+| **Verified by** | Static inspection: every `subprocess.run` / `subprocess.Popen` call in `scripts/` uses the list form with `shell=False`. |
 
 ### Correctness
 
-#### QS-19 — No silent merges during entity resolution
+#### QS-19, No silent merges during entity resolution
 
 | Field | Value |
 |---|---|
@@ -301,7 +301,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | Every merge path in stages 3-5 requires an explicit threshold crossing; every unclear case routes to fork. `resolver.Resolution` carries the `reason` field explaining the verdict. |
 | **Verified by** | `test_resolver.py`, `test_resolver_scenarios.py`. |
 
-#### QS-20 — Lint catches broken wikilinks
+#### QS-20, Lint catches broken wikilinks
 
 | Field | Value |
 |---|---|
@@ -312,7 +312,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | `lint.py` exit code non-zero on broken links; console output names them. |
 | **Verified by** | `python3 scripts/lint.py` on the current wiki. |
 
-#### QS-21 — Re-ingestion is idempotent
+#### QS-21, Re-ingestion is idempotent
 
 | Field | Value |
 |---|---|
@@ -325,7 +325,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 
 ### Usability
 
-#### QS-22 — All errors are diagnosable from stdout alone
+#### QS-22, All errors are diagnosable from stdout alone
 
 | Field | Value |
 |---|---|
@@ -336,7 +336,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 | **Measure** | No log files needed; no external tool needed; a user can paste the terminal output into a bug report and get a diagnosis. |
 | **Verified by** | Code review of `except` clauses in `ingest.py` and `query.py`. |
 
-#### QS-23 — Output is byte-compatible with Obsidian
+#### QS-23, Output is byte-compatible with Obsidian
 
 | Field | Value |
 |---|---|
@@ -351,7 +351,7 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 
 ## 10.3 Quality-Scenario Coverage Matrix
 
-| Scenario | Implemented | Tested | Audited |
+| Scenario | Implemented | Tested | Statically verified |
 |---|:---:|:---:|:---:|
 | QS-1 No outbound network | ✓ | - | ✓ |
 | QS-2 No secrets | ✓ | - | ✓ |
@@ -379,8 +379,8 @@ Each scenario follows the format: **Stimulus → Environment → Response → Re
 
 **Gaps worth noting:**
 
-- **QS-8 (relevance@5)** is manual and therefore the weakest testable quality in the set. A labelled evaluation set would let us measure precision/recall and track regression. This is [§ 11.3, L-1](11-risks-and-technical-debt.md#113-known-limitations).
-- **QS-7 / QS-10 / QS-11** have no automated profiling; they are measured by stopwatch on the author's machine. A profile harness would belong in `scripts/`.
+- **QS-8 (relevance@5)** is manual and therefore the weakest testable quality in the set. A labelled evaluation set would let us measure precision/recall and track regression. This is [§ 11.1, L-1](11-risks-and-technical-debt.md#l-1--no-automated-relevance-evaluation).
+- **QS-7 / QS-10 / QS-11** have no automated profiling; they are measured by stopwatch on a reference Apple Silicon MacBook Pro with 32 GB unified memory. A profile harness would belong in `scripts/`.
 - **QS-22 / QS-23** are verified by use, not by test. This is acceptable for a POC but would be a pre-flight check in a production system.
 
 ---
@@ -395,12 +395,12 @@ Each quality scenario traces back to either a quality goal, a technical constrai
 | QS-4, QS-5, QS-6 | Quality Goal Q2 (reproducibility) + [TC-1](02-architecture-constraints.md#21-technical-constraints) + [ADR-001](09-architecture-decisions.md#adr-001--zero-external-python-dependencies) + [ADR-007](09-architecture-decisions.md#adr-007--reverse-index-source_files-for-idempotent-re-ingestion) |
 | QS-7, QS-8, QS-9 | Quality Goal Q3 (retrieval) + [ADR-003](09-architecture-decisions.md#adr-003--fts5--wikilink-graph--rrf-over-vector-search) + F3 ([§ 1.1](01-introduction-and-goals.md#11-requirements-overview)) |
 | QS-10, QS-11, QS-12 | Hardware target + [§ 7.2 (Memory budget)](07-deployment-view.md#72-memory-budget) + [Pillar 4 (TurboQuant)](04-solution-strategy.md#pillar-4--the-runtime-turboquant-kv-cache) |
-| QS-13, QS-14, QS-15 | Maintainability as pre-requisite for auditability |
-| QS-16, QS-17, QS-18 | OWASP baseline + [§ 11.1 (Security posture)](11-risks-and-technical-debt.md#111-security-posture) |
+| QS-13, QS-14, QS-15 | Maintainability as pre-requisite for inspectability |
+| QS-16, QS-17, QS-18 | OWASP baseline + [README "Security and privacy posture"](../../README.md#security-and-privacy-posture) |
 | QS-19, QS-20, QS-21 | [ADR-002](09-architecture-decisions.md#adr-002--fork-on-uncertainty-never-silently-merge) + F2 + F6 |
 | QS-22, QS-23 | F5 + user experience expectations |
 
-Every quality goal in [section 1.2](01-introduction-and-goals.md#12-quality-goals) is covered by at least three scenarios. Every scenario has an owner (the module or audit that verifies it).
+Every quality goal in [section 1.2](01-introduction-and-goals.md#12-quality-goals) is covered by at least three scenarios. Every scenario has an owner (the module or inspection command that verifies it).
 
 ---
 

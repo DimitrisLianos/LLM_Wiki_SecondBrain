@@ -6,13 +6,13 @@ Standalone C4 documents with the same diagrams and additional detail are also av
 
 ---
 
-## 5.1 Whitebox Overall System — C4 Level 2 (Container View)
+## 5.1 Whitebox Overall System, C4 Level 2 (Container View)
 
-Opening the black box from [section 3](03-system-scope-and-context.md#32-technical-context--c4-level-1-system-context), the LLM Wiki system is composed of five *containers*, independently runnable or inspectable units of software and data.
+Opening the black box from [section 3](03-system-scope-and-context.md#32-technical-context--c4-level-1-system-context), the LLM Wiki system is composed of six *containers*, independently runnable or inspectable units of software and data. Five are always present; the **Web UI** container is optional and only materialises if the operator opts in by launching `web/api/app.py`.
 
 ```mermaid
 graph TB
- user(("User"))
+ user(("Operator"))
 
  subgraph SYS ["LLM Wiki system"]
  subgraph CLI ["Container -- CLI scripts<br/>Python 3.12+, stdlib only"]
@@ -22,6 +22,12 @@ graph TB
  lint["lint.py<br/><i>health checks</i>"]
  cleanup["cleanup_dedup.py<br/><i>offline merge</i>"]
  watch["watch.sh<br/><i>filesystem trigger</i>"]
+ end
+
+ subgraph WEB ["Container -- Web UI (optional)<br/>FastAPI + Lit, localhost only"]
+ api["web/api/app.py<br/><i>FastAPI<br/>127.0.0.1:3000</i>"]
+ routers["routers/*<br/><i>server, search, wiki,<br/>query, ingest, lint,<br/>dedup, admin</i>"]
+ front["web/frontend/dist<br/><i>Vite-bundled Lit UI<br/>served by FastAPI</i>"]
  end
 
  subgraph INF ["Container -- Inference servers<br/>llama.cpp (TurboQuant fork)"]
@@ -51,6 +57,14 @@ graph TB
  user --> lint
  user --> cleanup
  user --> watch
+ user -. "browser<br/>(optional)" .-> api
+
+ api --> routers
+ api --> front
+ routers -. "in-process import<br/>(no subprocess fork)" .-> ingest
+ routers -. "in-process import" .-> search_c
+ routers -. "in-process import" .-> lint
+ routers -. "in-process import" .-> cleanup
 
  ingest -- "HTTP /v1/chat/completions" --> gen
  query -- "HTTP /v1/chat/completions" --> gen
@@ -76,6 +90,7 @@ graph TB
  cleanup --> reg
 
  style CLI fill:#fef9e7,stroke:#f39c12,color:#000
+ style WEB fill:#fde2e4,stroke:#c0392b,color:#000
  style INF fill:#fdebd0,stroke:#e67e22,color:#000
  style VAULT fill:#eafaf1,stroke:#27ae60,color:#000
  style SIDE fill:#f5eef8,stroke:#8e44ad,color:#000
@@ -88,9 +103,10 @@ graph TB
 
 | Container | Technology | Responsibility | Lifecycle |
 |---|---|---|---|
-| **CLI scripts** | Python 3.12+, stdlib only | User-facing commands. Everything the user interacts with on the terminal lives here. | Short-lived per command |
+| **CLI scripts** | Python 3.12+, stdlib only | User-facing commands. Everything the operator interacts with on the terminal lives here. | Short-lived per command |
+| **Web UI (optional)** | FastAPI + Uvicorn (Python), Lit + Marked + DOMPurify (frontend), bundled by Vite | Browser surface for the same operations as the CLI. Wraps `scripts/*` as an in-process library, serves the Vite-built frontend, adds CSP + security headers. Binds to `127.0.0.1:3000`, no auth, no rate limiting. | Long-running while the browser tab is open |
 | **Inference servers** | [llama.cpp](https://github.com/TheTom/llama-cpp-turboquant) with Metal, Gemma 4 26B-A4B UD Q4_K_M | Text generation (mandatory); embeddings for entity resolution stage 5 (optional) | Long-running daemons, started on demand |
-| **Obsidian vault** | Filesystem (Markdown + YAML frontmatter) | Persistent source and generated content. The only durable, human-facing state. | Permanent, managed by the user |
+| **Obsidian vault** | Filesystem (Markdown + YAML frontmatter) | Persistent source and generated content. The only durable, human-facing state. | Permanent, managed by the operator |
 | **Derived state** | Filesystem (SQLite + JSON) | Regeneratable indices, caches and calibration data. `.gitignore`-d. | Rebuilt by `search.py --rebuild` or automatically after each ingest |
 | **Seed gazetteer** | JSON committed to git | 149 curated canonical alias entries covering major AI/tech entities. Read-only at runtime. | Updated via hand edits + code review |
 
@@ -104,10 +120,12 @@ graph TB
 | `search.py` → SQLite FTS5 | `sqlite3` stdlib, parameterised queries | Column weights `(10.0, 3.0, 5.0, 1.0)` for `(name, type, tags, content)` passed via `?` placeholders. |
 | `ingest.py` / `query.py` → wiki | Filesystem writes/reads under a `safe_filename()` discipline | Path traversal defences in [`llm_client.safe_filename()`](../../scripts/llm_client.py). |
 | `resolver.py` → seed + runtime gazetteer | JSON file reads with on-access normalisation | Seed tier is read-only; runtime tier is append-only via `aliases.promote()`. |
+| browser → Web UI | HTTP over `127.0.0.1:3000` | CSP (`script-src 'self'`), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`. Markdown passes through DOMPurify with an explicit URI allowlist before `unsafeHTML`. |
+| Web UI routers → `scripts/*` | Python import (in-process) | Web UI reuses the CLI modules directly; no extra subprocess boundary. Path-containment guards (`resolve()` + `relative_to()`) on all endpoints that take a page name. |
 
 ---
 
-## 5.2 Whitebox `ingest.py` — C4 Level 3 (Component View)
+## 5.2 Whitebox `ingest.py`, C4 Level 3 (Component View)
 
 The ingestion pipeline is the single largest module. `scripts/ingest.py` is roughly 1 850 lines organised into cohesive component groups. Decomposed at the component level:
 
@@ -180,7 +198,7 @@ Each layer is one responsibility and the handoffs are the only seams. Layers are
 
 | Layer | Components | Responsibility |
 |---|---|---|
-| **Read** | `detect_and_parse`, `_parse_pdf`, `_parse_sms_xml`, `_extract_source_date` | Turn a file in `raw/` into UTF-8 text and an optional source date. PDF via Poppler subprocess. SMS XML via `xml.etree.ElementTree` (not vulnerable to XXE, Python's ET parser does not expand external entities, see [section 11.1, SEC-3](11-risks-and-technical-debt.md#111-security-posture)). |
+| **Read** | `detect_and_parse`, `_parse_pdf`, `_parse_sms_xml`, `_extract_source_date` | Turn a file in `raw/` into UTF-8 text and an optional source date. PDF via Poppler subprocess. SMS XML via `xml.etree.ElementTree`, whose default Python 3.12 behaviour does not expand external entities (XXE-safe by construction). |
 | **Chunking** | `chunk_text` | Paragraph-boundary splits at ≤ 50 000 chars per chunk. Most single articles fit in one chunk; long PDFs split into 2-8. |
 | **Extraction** | `extract_chunks_parallel`, `extract_chunk`, `_parse_json` | Parallel LLM calls across the two llama.cpp slots. Structured prompt asks for `{title, summary, key_claims, entities, concepts}`. Tolerant JSON parser recovers from the LLM's occasional half-valid output. Context-overflow errors auto-split the chunk and retry recursively (up to depth 2). |
 | **Merge + canonicalize** | `merge_extractions`, `_canonicalize_descriptions`, `_normalize_via_aliases` | Deduplicate across chunks; richest description wins. Then a second LLM pass rewrites context-local descriptions ("the model", "our framework") into stand-alone ones, this is essential for the resolver's Jaccard stage to work. Finally the alias gazetteer short-circuits known entities. |
@@ -189,7 +207,7 @@ Each layer is one responsibility and the handoffs are the only seams. Layers are
 
 ---
 
-## 5.3 Whitebox `search.py` and `query.py` — retrieval and synthesis
+## 5.3 Whitebox `search.py` and `query.py`, retrieval and synthesis
 
 The read pipeline is intentionally much thinner than the write pipeline.
 
@@ -240,7 +258,7 @@ The `find_source_page()` method on `WikiSearch` is load-bearing for idempotency:
 
 ---
 
-## 5.4 Whitebox `resolver.py` — the entity resolution pipeline
+## 5.4 Whitebox `resolver.py`, the entity resolution pipeline
 
 The resolver is the single most complex module. Its internal structure is covered in [section 6.4 (Runtime View, stages 0-5)](06-runtime-view.md#64-entity-resolution-stages-05). At the *static* building-block level, the components are:
 
@@ -260,7 +278,7 @@ The `aliases.py` sidecar (544 lines) manages the two-tier gazetteer: the committ
 
 ---
 
-## 5.5 `llm_client.py` — the shared foundation
+## 5.5 `llm_client.py`, the shared foundation
 
 The smallest and most load-bearing module. Every other script imports from it. Its job is to be the single source of truth for three things:
 
@@ -272,12 +290,80 @@ The two typed exceptions, `ContextOverflowError` and `EmbeddingUnavailableError`
 
 ---
 
-## 5.6 Why this decomposition
+## 5.6 Whitebox `web/`, the optional UI container
+
+The web UI is structurally a thin wrapper: it adds no new pipelines. Every router imports the same `scripts/*` modules the CLI uses and delegates to them in-process. The value it adds is presentation, request routing, HTTP-level hardening and a browser-friendly form of the operator loop.
+
+```mermaid
+graph TB
+ subgraph API ["web/api -- FastAPI"]
+ app["app.py<br/><i>ASGI entrypoint<br/>CSP + security headers<br/>static mount for dist/</i>"]
+ models["models.py<br/><i>Pydantic request /<br/>response schemas</i>"]
+ svc["services.py<br/><i>shared helpers over scripts/</i>"]
+ end
+
+ subgraph ROUT ["web/api/routers"]
+ r_server["server.py<br/><i>health, reasoning toggle</i>"]
+ r_search["search.py<br/><i>FTS5 over HTTP</i>"]
+ r_wiki["wiki.py<br/><i>page read / write /<br/>rename / delete</i>"]
+ r_query["query.py<br/><i>answer synthesis,<br/>optional ddgs augmentation</i>"]
+ r_ingest["ingest.py<br/><i>upload + pipeline<br/>(streams progress)</i>"]
+ r_lint["lint.py<br/><i>health checks +<br/>orphan cleanup</i>"]
+ r_dedup["dedup.py<br/><i>cleanup_dedup driver</i>"]
+ r_admin["admin.py<br/><i>reset, reindex, logs</i>"]
+ end
+
+ subgraph FRONT ["web/frontend (built to dist/)"]
+ main_js["src/main.js<br/><i>Lit app shell</i>"]
+ comps["src/components/*<br/><i>per-view Lit elements</i>"]
+ lib["src/lib/*<br/><i>api-client, markdown,<br/>sanitizer (DOMPurify)</i>"]
+ end
+
+ SCRIPTS[("scripts/*<br/>ingest, search,<br/>lint, cleanup_dedup")]
+
+ app --> models
+ app --> svc
+ app --> r_server
+ app --> r_search
+ app --> r_wiki
+ app --> r_query
+ app --> r_ingest
+ app --> r_lint
+ app --> r_dedup
+ app --> r_admin
+ app --> main_js
+ main_js --> comps
+ comps --> lib
+
+ r_search -. "import WikiSearch" .-> SCRIPTS
+ r_wiki -. "import llm_client helpers" .-> SCRIPTS
+ r_query -. "import query + search" .-> SCRIPTS
+ r_ingest -. "import ingest pipeline" .-> SCRIPTS
+ r_lint -. "import lint" .-> SCRIPTS
+ r_dedup -. "import cleanup_dedup" .-> SCRIPTS
+ r_admin -. "import llm_client + aliases" .-> SCRIPTS
+
+ style API fill:#fde2e4,stroke:#c0392b,color:#000
+ style ROUT fill:#fdebd0,stroke:#e67e22,color:#000
+ style FRONT fill:#eafaf1,stroke:#27ae60,color:#000
+```
+
+Three design choices are load-bearing for this container:
+
+1. **No new persistence layer.** The routers do not hold mutable state. They re-enter `scripts/*` for every request, and state lives exclusively in the existing Obsidian vault and `db/` side-state containers. Re-reading the disk on every request is cheap compared to the LLM call it almost always ends in.
+2. **Strict CSP, no inline scripts.** The CSP header set in `app.py` forbids `'unsafe-inline'` on `script-src`; the Vite build emits hashed bundle entrypoints and every `<script>` element in the built `index.html` loads from `self`. Inline markdown is rendered via Marked then passed through DOMPurify with an explicit allowlist for `http:`/`https:`/`mailto:`/`tel:` before Lit's `unsafeHTML` inserts it.
+3. **Path-containment on every endpoint that takes a page name.** `web/api/routers/wiki.py` and `admin.py` always resolve the user-supplied path and call `relative_to(WIKI_DIR)` before touching the filesystem, matching the same discipline `scripts/llm_client.safe_filename()` applies in the CLI.
+
+The container is optional by design: deleting `web/` does not change any behaviour under `scripts/`. This is what keeps the privacy posture of [Q1](01-introduction-and-goals.md#12-quality-goals) intact, neither `fastapi` nor `ddgs` is on the code path that runs during a pure-CLI ingest.
+
+---
+
+## 5.7 Why this decomposition
 
 The modules are organised around three orthogonal axes:
 
 - **The write/read split.** `ingest.py` and everything it calls (the resolver, the aliases module) are write-path. `query.py` and `search.py` are read-path. `llm_client.py` is shared infrastructure.
 - **Pure functions vs. stateful classes.** `search.py` exposes a `WikiSearch` class because the SQLite connection is its state. `resolver.py` exposes a `Resolver` class because the gazetteer + caches are its state. Everything else is plain functions.
-- **Stdlib-first, optional second-server second.** The core pipeline runs on `llama-server` only. The embedding server is a second, optional llama.cpp instance used only for resolver stage 5 with `--use-embeddings`. Nothing else in the system knows or cares whether it is running.
+- **Stdlib-first core, optional surfaces second.** The core pipeline under `scripts/` runs on stdlib and `llama-server` only. The embedding server, the web UI (`web/`) and web-search augmentation (`ddgs`) are all additive surfaces that can be omitted without changing anything under `scripts/`.
 
-This structure is the direct result of the "zero dependencies" and "fork-on-uncertainty" strategic choices from [section 4](04-solution-strategy.md#42-key-strategic-decisions). Were either of those relaxed, the decomposition would be different, for example, a typical RAG project would have a `VectorStore` container here instead of `WikiSearch`.
+This structure is the direct result of the "stdlib-only core" and "fork-on-uncertainty" strategic choices from [section 4](04-solution-strategy.md#42-key-strategic-decisions). Were either of those relaxed, the decomposition would be different, for example, a typical RAG project would have a `VectorStore` container here instead of `WikiSearch`.

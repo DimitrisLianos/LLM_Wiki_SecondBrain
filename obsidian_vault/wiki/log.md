@@ -1,6 +1,3 @@
----
-type: log
-updated: 2026-04-12
----
+# Log
 
-# Wiki Log
+_Ingestion events are appended here as you run `python3 scripts/ingest.py`._

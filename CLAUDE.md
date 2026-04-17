@@ -1,4 +1,4 @@
-# LLM Wiki — Schema
+# LLM Wiki, Schema
 
 A personal knowledge base maintained by a local LLM following [Karpathy's LLM Wiki pattern](https://x.com/karpathy/status/2039805659525644595).
 **Fully offline**, all processing runs on-device via llama.cpp ([TurboQuant fork](https://github.com/TheTom/llama-cpp-turboquant)) + Gemma 4 26B-A4B (Unsloth Dynamic UD weights, turbo4 KV cache).
@@ -27,7 +27,8 @@ SecondBrain_POC/
 ├── models/ # GGUF model files (gitignored)
 ├── llama.cpp/ # llama.cpp build (gitignored)
 ├── db/ # SQLite FTS5 index + alias_registry.json (gitignored)
-├── scripts/
+├── logs/ # Rotating runtime logs (gitignored)
+├── scripts/ # Stdlib-only CLI surface
 │ ├── llm_client.py # Shared LLM client, paths and constants
 │ ├── search.py # SQLite FTS5 + wikilink graph + RRF retrieval
 │ ├── start_server.sh # Launch llama.cpp server with optimal settings
@@ -40,21 +41,33 @@ SecondBrain_POC/
 │ ├── cleanup_dedup.py # Merge duplicate pages (stem + alias-driven)
 │ ├── lint.py # Wiki health checker
 │ └── watch.sh # Filesystem watcher for auto-ingestion
+├── web/ # Optional FastAPI + Lit web UI (adds fastapi + ddgs deps)
+│ ├── api/
+│ │ ├── app.py # FastAPI entrypoint, CSP + security headers, port 3000
+│ │ ├── models.py # Pydantic request / response schemas
+│ │ ├── services.py # Shared service layer over scripts/
+│ │ └── routers/ # server, search, wiki, query, ingest, lint, dedup, admin
+│ └── frontend/
+│ ├── src/ # Lit components, DOMPurify + Marked renderers
+│ ├── dist/ # Vite production bundle (served by FastAPI)
+│ └── package.json # lit, marked, dompurify, vite
 ├── awake_mac.py # Prevent Mac sleep during long ingests
+├── pyproject.toml # Stdlib-only core; optional extras: fastapi, ddgs
 └── CLAUDE.md # This file, the wiki schema
 ```
 
 ## Local LLM Stack
 
 - **Model**: Gemma 4 26B-A4B (Q4_K_M Unsloth Dynamic / UD), ~16GB
-- **Runtime**: llama.cpp server ([TurboQuant fork](https://github.com/TheTom/llama-cpp-turboquant)), Metal GPU, flash attention, q8_0 K + turbo4 V KV cache, `--reasoning off`
+- **Runtime**: llama.cpp server ([TurboQuant fork](https://github.com/TheTom/llama-cpp-turboquant)), Metal GPU, flash attention, q8_0 K + turbo4 V KV cache, reasoning toggle (default `on` for chat)
 - **Context**: 65536 total / 2 parallel slots = 32768 tokens per slot
-- **Hardware**: MacBook Pro M5 2025, 32GB unified RAM, 10 performance cores
-- **API**: llama.cpp HTTP endpoint at `http://127.0.0.1:8080` (`/v1/chat/completions`)
+- **Hardware**: Reference profile is an Apple Silicon MacBook with ≥ 32GB unified RAM (the project was developed on an M5 / 32GB class machine). Anything with comparable memory bandwidth and Metal support should work.
+- **API**: llama.cpp HTTP endpoint at `http://127.0.0.1:8080` (`/v1/chat/completions`), embedding server at `http://127.0.0.1:8081`
+- **Optional web UI**: FastAPI + Lit app under `web/`, bound to `127.0.0.1:3000`. Launched via `python3 web/api/app.py`.
 
 Start the server: `bash scripts/start_server.sh`
 
-**Critical flag**: `--reasoning off` disables Gemma 4's thinking mode at the server level. Without this, invisible thinking tokens consume the output budget and truncate responses to 0 content.
+**Reasoning mode**: Gemma 4's `<think>` mode defaults to `on` at the server level for chat quality. The mode is a toggle in `scripts/start_server.sh` (`REASONING="on" | "off"`) and is also exposed in the web UI header. **Ingestion requires `off`**: thinking tokens consume the output budget before the entity-extraction JSON is emitted, producing empty titles. Flip the toggle before each `ingest` run, then flip it back. All `<think>` blocks are automatically stripped from output by `llm_client.py`. Token budgets account for thinking overhead: query generation uses `max_tokens=8192`, classification uses `max_tokens=200`.
 
 ## Page Format
 
@@ -143,7 +156,7 @@ Monitors `raw/` for new files and auto-ingests them. Optional `--lint` flag runs
 
 Entities and concepts extracted from sources are deduplicated through a six-stage resolver (`scripts/resolver.py`) grounded in entity-linking literature (BLINK, ReFinED, TAGME, mGENRE) and industry gazetteer patterns (spaCy EntityRuler, Stanford CoreNLP RegexNER, Wikidata surface forms).
 
-### Stage 0 — Canonical alias registry (gazetteer)
+### Stage 0, Canonical alias registry (gazetteer)
 Before any similarity math, the incoming mention is looked up in a two-tier canonical alias registry:
 
 - **Seed tier**, `scripts/data/seed_aliases.json`, 149 curated entries for AI labs, models, frameworks, tech companies and core concepts. Committed to git, read-only at runtime.
@@ -153,7 +166,7 @@ A hit short-circuits the rest of the pipeline: the mention is rewritten to the c
 
 This layer is the prevention mechanism for the "ChatGPT (tool) vs ChatGPT (model)" fork epidemic: the fork class described in academic EL as "surface form ambiguity with context-local priors".
 
-### Stages 1-5 — Fallback pipeline
+### Stages 1-5, Fallback pipeline
 Mentions that don't hit the registry run through the original layered resolver:
 1. **Exact path**, if no file exists with this name, create.
 2. **Type constraint**, fork on genuine polysems with disjoint types.

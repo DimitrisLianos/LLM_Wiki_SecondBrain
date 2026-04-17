@@ -37,21 +37,21 @@ graph TB
  style SYS fill:#f8cecc,stroke:#b85450,color:#000
 ```
 
-### Pillar 1 — The Pattern (Karpathy's LLM Wiki)
+### Pillar 1, The Pattern (Karpathy's LLM Wiki)
 
 Strategic role: **organising principle**. Everything in the architecture collapses out of the claim that *an LLM should compile a wiki, not answer from embeddings*. This claim is the reason there is no vector database, the reason ingestion is expensive and retrieval is cheap and the reason entity resolution matters at all. Without this pillar, the project would be a small RAG POC with none of its distinctive properties.
 
-### Pillar 2 — The Model (Gemma 4 26B-A4B)
+### Pillar 2, The Model (Gemma 4 26B-A4B)
 
 Strategic role: **enough knowledge and reasoning to make extraction useful**. Extraction quality is the single point of failure in the ingestion pipeline, every entity and concept in the wiki is something Gemma 4 pulled out of text. The [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4) reports 82,6 % on MMLU Pro and 82,3 % on GPQA Diamond for the instruction-tuned 26B-A4B variant, within 2-3 % of the 31B dense variant at a fraction of the active parameters. For structured JSON extraction on a personal corpus, this is currently the best open-weights operating point.
 
 The Mixture-of-Experts architecture matters operationally: 25,2 B total parameters fit in ≈ 16 GB of unified memory at Q4_K_M, but only 3,8 B are active per token via the learned router selecting 8 experts (plus 1 shared) from 128. This is what makes inference fast enough on a laptop.
 
-### Pillar 3 — The Weights (Unsloth Dynamic 2.0)
+### Pillar 3, The Weights (Unsloth Dynamic 2.0)
 
 Strategic role: **more quality per GB without paying for it**. [Unsloth Dynamic 2.0 (UD)](https://unsloth.ai/blog/dynamic-v2) is importance-aware per-layer quantization ([docs](https://unsloth.ai/docs/basics/unsloth-dynamic-2.0-ggufs)): attention-heavy layers that matter more for output quality get higher precision; less impactful MLP layers get lower precision. The GGUF file is the same ≈ 16 GB as vanilla Q4_K_M, the user-facing operation is identical and the output is measurably better. This is essentially free improvement, hence a pillar even though it changes no code on this side.
 
-### Pillar 4 — The Runtime (TurboQuant KV Cache)
+### Pillar 4, The Runtime (TurboQuant KV Cache)
 
 Strategic role: **buy back ≈ 3 GB of memory headroom**. [TurboQuant](https://arxiv.org/abs/2504.19874) (Zandieh et al. ICLR 2026) compresses the KV cache online via rotated random projections (PolarQuant with Walsh-Hadamard rotation). We use the asymmetric `q8_0` K + `turbo4` V configuration: full-precision keys preserve attention routing accuracy, compressed values reduce the KV cache from ≈ 5 GB to ≈ 3 GB.
 
@@ -132,7 +132,7 @@ This asymmetry, expensive writes, cheap reads, is the defining operational prope
 | **Concurrency** | `concurrent.futures.ThreadPoolExecutor` bounded at `PARALLEL_SLOTS = 2` to match the llama.cpp server's `--parallel 2`. No async runtime. No process pool. |
 | **Error handling** | Every boundary (HTTP, filesystem, subprocess, LLM JSON parse) handles its own failures explicitly with typed exceptions (`ContextOverflowError`, `EmbeddingUnavailableError`). Fallbacks are explicit, not silent. |
 | **Observability** | Stdout and exit codes. No log files, no metrics daemon. Errors carry enough context to diagnose from the terminal. |
-| **Security posture** | Minimised attack surface: no inbound ports, no third-party dependencies, no secrets anywhere in the tree, parameterised SQL only. Full audit in [section 11.1](11-risks-and-technical-debt.md#111-security-posture). |
+| **Security posture** | Minimised attack surface: no outbound network, loopback-only server binding, no third-party dependencies, no secrets in the tree, parameterised SQL only, list-form subprocess calls, path-containment on every wiki write. The concrete design properties are enumerated in the [README "Security and privacy posture"](../../README.md#security-and-privacy-posture) section. |
 | **Schema evolution** | The wiki is just Markdown. A schema change means updating `lint.py` and running it. Data never needs a migration step. |
 
 These strategic choices are deliberately boring. The interesting architecture is in the pipelines ([section 6](06-runtime-view.md)), the entity resolver ([section 6.4](06-runtime-view.md#64-entity-resolution-stages-05)) and the ADRs ([section 9](09-architecture-decisions.md)). The foundation underneath is intentionally flat and standard-library-only so that attention can go to the interesting parts.

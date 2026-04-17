@@ -48,7 +48,7 @@ There is nothing else in the picture. Specifically, there is **no** outbound HTT
 
 ---
 
-## 3.2 Technical Context — C4 Level 1 (System Context)
+## 3.2 Technical Context, C4 Level 1 (System Context)
 
 The C4 model's Level 1 diagram focuses on one question: *what interacts with the system and over what protocol?* At Level 1, the entire LLM Wiki project is one box. The surrounding boxes are the actors and external software that touch it.
 
@@ -88,7 +88,7 @@ graph TB
 
 - `user → app` is the primary user interaction, mediated through `python3 scripts/<command>.py`. Every interactive path terminates in stdout on the user's own terminal.
 - `app → fs` is the only persistence mechanism. The "database" is a SQLite file. The "vector store" does not exist. The wiki is a folder of Markdown files.
-- `app → poppler` is the single subprocess boundary. `scripts/ingest.py` calls `pdftotext` and `pdfinfo` in list form (`shell=False`) on a resolved `Path` object (see [section 11.1, Finding SEC-2](11-risks-and-technical-debt.md#111-security-posture) for the path-containment nuance).
+- `app → poppler` is the single subprocess boundary. `scripts/ingest.py` calls `pdftotext` and `pdfinfo` in list form (`shell=False`) on a `Path` that has already been `.resolve()`d and verified to live inside `RAW_DIR`, so filename metacharacters cannot reach a shell and arbitrary paths cannot escape the raw directory.
 - `obs → fs` is read-only from Obsidian's side: Obsidian renders what the pipeline wrote. Obsidian does not run during ingestion; it watches the filesystem.
 
 The C4 model's Level 2 and Level 3 views zoom into what is inside the `SYS` box. Those are in [section 5 (Building Block View)](05-building-block-view.md), or, as standalone documents, in [`docs/c4/L2-container.md`](../c4/L2-container.md) and [`docs/c4/L3-component.md`](../c4/L3-component.md).

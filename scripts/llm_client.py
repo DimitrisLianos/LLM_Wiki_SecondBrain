@@ -102,20 +102,31 @@ class ContextOverflowError(Exception):
 
 
 def llm(prompt, system="", max_tokens=4096, temperature=0.3,
-        timeout=300, _retries=2):
+        timeout=300, _retries=2, strip_thinking=True):
     """post to llama.cpp /v1/chat/completions.
 
-    server runs with --reasoning off so no thinking tokens are emitted.
+    server runs with reasoning enabled — gemma 4 produces <think> blocks
+    before its actual content. these thinking tokens improve answer quality
+    but count against max_tokens. callers should budget accordingly:
+      - classification / short tasks: max_tokens ≥ 200
+      - generation / answers:         max_tokens ≥ 4096 (8192 recommended)
+      - extraction / ingestion:       max_tokens ≥ 4096 (default)
+
+    all <think> blocks are stripped from the returned content automatically
+    unless strip_thinking=False (useful for classification where the model
+    may place the answer inside the think block).
+
     raises ContextOverflowError on HTTP 400 (prompt too large).
     retries transient 5xx errors with exponential backoff.
 
     args:
-        prompt:      user message content.
-        system:      optional system message.
-        max_tokens:  max completion length.
-        temperature: sampling temperature (lower = more deterministic).
-        timeout:     http request timeout in seconds.
-        _retries:    number of retry attempts for transient errors.
+        prompt:          user message content.
+        system:          optional system message.
+        max_tokens:      max completion length (includes thinking tokens).
+        temperature:     sampling temperature (lower = more deterministic).
+        timeout:         http request timeout in seconds.
+        _retries:        number of retry attempts for transient errors.
+        strip_thinking:  remove <think> blocks from output (default True).
     """
     messages = []
     if system:
@@ -137,9 +148,10 @@ def llm(prompt, system="", max_tokens=4096, temperature=0.3,
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 result = json.loads(resp.read())
             content = result["choices"][0]["message"]["content"]
-            # strip any residual thinking blocks.
-            content = re.sub(r"<think>[\s\S]*?</think>", "", content).strip()
-            content = re.sub(r"<think>[\s\S]*$", "", content).strip()
+            if strip_thinking:
+                # strip any residual thinking blocks.
+                content = re.sub(r"<think>[\s\S]*?</think>", "", content).strip()
+                content = re.sub(r"<think>[\s\S]*$", "", content).strip()
             return content
         except urllib.error.HTTPError as e:
             err_body = ""
@@ -148,8 +160,13 @@ def llm(prompt, system="", max_tokens=4096, temperature=0.3,
             except Exception:
                 pass
 
-            # 400 = context overflow. retrying the same payload is pointless.
+            # 400 = context overflow or model error. retrying is pointless.
             if e.code == 400:
+                if "not found" in err_body:
+                    raise RuntimeError(
+                        f"model not found. restart the LLM server. "
+                        f"server: {err_body[:200]}"
+                    ) from None
                 raise ContextOverflowError(
                     f"prompt too large ({len(prompt):,} chars). "
                     f"server: {err_body[:200]}"

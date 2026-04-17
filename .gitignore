@@ -112,14 +112,47 @@ obsidian_vault/wiki/synthesis/**
 !obsidian_vault/wiki/synthesis/.gitkeep
 
 # --- transient runtime / logs. ---
+# logs/ holds rotating runtime logs from start_server.sh, the embedding
+# server and the optional web ui. the directory is preserved via a
+# .gitkeep marker so a fresh clone has somewhere to write on day one.
 *.log
 llama.cpp.log
 scripts/*.log
 scripts/.server.pid
 nohup.out
+logs/**
+!logs/.gitkeep
 
 # --- temp / backup files. ---
 *.bak
 *.tmp
 *.orig
 *.rej
+
+# --- web frontend build artifacts / deps. ---
+# node_modules and build output never belong in the repo.
+web/frontend/node_modules/
+web/frontend/dist/
+web/frontend/.vite/
+web/frontend/*.local
+
+# --- uv / pip lockfiles. ---
+# pyproject.toml is the source of truth; the lockfile is a local artifact.
+uv.lock
+
+# --- python editable installs / pyc stragglers under web/. ---
+web/**/__pycache__/
+web/**/*.pyc
+
+# --- environment / secrets. ---
+# never commit real env files. an `.env.example` (when present) documents
+# the required variables without shipping any values.
+.env
+.env.*
+!.env.example
+
+# --- maintainer's local notes. ---
+# internal/ holds personal working notes that are not part of the
+# public documentation. anything a re-user needs belongs under docs/
+# or in the readme; this folder is strictly local.
+internal/

@@ -220,7 +220,7 @@ sequenceDiagram
 
 ### Stage-by-stage detail
 
-#### Stage 0 — Canonical alias registry (the prevention layer)
+#### Stage 0, Canonical alias registry (the prevention layer)
 
 Reference: `scripts/resolver.py:_stage_0_alias_anchor` + `scripts/aliases.py`
 
@@ -228,11 +228,11 @@ The two-tier gazetteer short-circuits the entire downstream pipeline for known e
 
 This layer is the fix for the fork epidemic documented in [Appendix A, F-4](appendix-a-academic-retrospective.md#f-4--chatgpt-fork-epidemic). The full design rationale is in [ADR-005](09-architecture-decisions.md#adr-005--six-stage-entity-resolver-with-gazetteer-anchor).
 
-#### Stages 1–2 — Exact path and type constraint
+#### Stages 1–2, Exact path and type constraint
 
 Stage 1 is the trivial case: if no file with this name exists, create. Stage 2 forks on genuine polysems, same name, different types, *and* sufficiently different descriptions. The "and descriptions also disagree" condition was added after the *Aedes aegypti* incident, where the LLM re-classified the same biological species across runs and the naive type-mismatch rule forked `Aedes aegypti` into `Aedes aegypti (model)` on re-ingest. See [Appendix A, F-6](appendix-a-academic-retrospective.md#f-6--aedes-aegypti-fork-from-llm-type-noise).
 
-#### Stage 3 — Stemmed Jaccard similarity
+#### Stage 3, Stemmed Jaccard similarity
 
 Jaccard similarity over the set of stemmed content words in the two descriptions. Thresholds:
 
@@ -242,13 +242,13 @@ Jaccard similarity over the set of stemmed content words in the two descriptions
 
 Stemming is a plain Porter stemmer reimplementation in pure Python. Stop-word removal and lowercasing happen before the token set is built.
 
-#### Stage 4 — LLM pairwise judge
+#### Stage 4, LLM pairwise judge
 
 For borderline cases in the `(0.15, 0.55)` band, the resolver issues one LLM call asking "are these two descriptions referring to the same entity?". The verdict is cached in `db/judge_cache.json` keyed by the normalised `(incoming_name, existing_name)` pair, so the same pair never costs two judge calls across runs.
 
 The prompt is narrow, one-shot and typed to return `YES` or `NO` with a one-sentence rationale. The default on LLM disagreement with the Jaccard signal is to *trust the judge*, because the judge has access to more context than a pure bag-of-words measure.
 
-#### Stage 5 — bge-m3 cosine (opt-in)
+#### Stage 5, bge-m3 cosine (opt-in)
 
 Only active when `ingest.py` is run with `--use-embeddings` AND `scripts/start_embed_server.sh` has been started on port 8081 with a bge-m3 GGUF model. This stage:
 

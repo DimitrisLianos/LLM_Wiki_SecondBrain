@@ -1,6 +1,6 @@
 # LLM Wiki
 
-A fully local implementation of [Karpathy's LLM Knowledge Base](https://x.com/karpathy/status/2039805659525644595) pattern. No cloud APIs, no data exfiltration, no external Python dependencies beyond the standard library.
+A fully local implementation of [Karpathy's LLM Knowledge Base](https://x.com/karpathy/status/2039805659525644595) pattern. No cloud APIs, no data exfiltration. The ingest + query core runs on the Python standard library alone; the optional web UI and optional web-search augmentation add two narrowly-scoped runtime dependencies (`fastapi`, `ddgs`) that are not reached by any offline-only code path.
 
 Drop source documents into a folder. A local LLM reads them, extracts entities and concepts, writes interlinked wiki pages and maintains a persistent, compounding knowledge graph, all on-device, all offline.
 
@@ -70,15 +70,19 @@ graph LR
 - [§ 8, Cross-cutting Concepts](docs/arc42/08-crosscutting-concepts.md), domain model, error handling, concurrency, prompt discipline
 - [§ 9, Architecture Decisions](docs/arc42/09-architecture-decisions.md), ADR-001 through ADR-007 (zero deps, fork llama.cpp, FTS5+graph, asymmetric KV, six-stage resolver, F1 gates, reverse-index idempotency)
 - [§ 10, Quality Requirements](docs/arc42/10-quality-requirements.md), 23 ISO/IEC 25010 scenarios in arc42 S/E/R/M format
-- [§ 11, Risks and Technical Debt](docs/arc42/11-risks-and-technical-debt.md), **security audit, PII audit**, known limitations, debt, risk register
+- [§ 11, Risks and Technical Debt](docs/arc42/11-risks-and-technical-debt.md), known limitations, technical debt, risk register, scaling limits
 - [§ 12, Glossary](docs/arc42/12-glossary.md), ~75 alphabetical terms
-- [**Appendix A, Academic Retrospective**](docs/arc42/appendix-a-academic-retrospective.md), **what we did, what we did and failed (F-1..F-6), what we did and succeeded but didn't fit (D-1..D-5), meta-lessons (M-1..M-5)**
+- [**Appendix A, Academic Retrospective**](docs/arc42/appendix-a-academic-retrospective.md), design trade-offs: what worked and fit purpose, what succeeded but didn't fit (D-1..D-5), labelled failure modes (F-1..F-6), meta-lessons (M-1..M-5)
 
 ### C4 model (standalone)
 
 - [`docs/c4/L1-system-context.md`](docs/c4/L1-system-context.md), Level 1, System Context
 - [`docs/c4/L2-container.md`](docs/c4/L2-container.md), Level 2, Containers
 - [`docs/c4/L3-component.md`](docs/c4/L3-component.md), Level 3, Components
+
+#### Web UI walkthrough
+
+- [`docs/UI.md`](docs/UI.md), panel-by-panel tour of the optional web UI, with screenshots of every view and the near-term UI roadmap
 
 ### Quick links by question
 
@@ -94,7 +98,8 @@ graph LR
 | "Why fork llama.cpp?" | [arc42 § 9, ADR-002](docs/arc42/09-architecture-decisions.md) and [ADR-004](docs/arc42/09-architecture-decisions.md) |
 | "What are the quality goals?" | [arc42 § 1.2](docs/arc42/01-introduction-and-goals.md) + [§ 10](docs/arc42/10-quality-requirements.md) |
 | "What went wrong?" | [Appendix A § A.4](docs/arc42/appendix-a-academic-retrospective.md) |
-| "What are the security and PII findings?" | [arc42 § 11.1-11.2](docs/arc42/11-risks-and-technical-debt.md) |
+| "What are the known limitations and open debt?" | [arc42 § 11](docs/arc42/11-risks-and-technical-debt.md) |
+| "How do I use the web UI?" | [`docs/UI.md`](docs/UI.md) |
 | "What is a term I don't recognise?" | [arc42 § 12, Glossary](docs/arc42/12-glossary.md) |
 
 ---
@@ -105,16 +110,20 @@ The full setup and deployment procedure is in [arc42 § 7 (Deployment View)](doc
 
 ### Prerequisites
 
-- **macOS on Apple Silicon**, tested on M5 Pro / 32 GB; should work on M1+ / 16 GB+
+- **Platform**: **macOS on Apple Silicon is the reference target** (M-series, Metal GPU). Linux with an NVIDIA GPU (CUDA) or a modern CPU-only build also works; Windows is supported via **WSL 2** (Ubuntu) with the Linux instructions below. Native Windows (PowerShell) is not tested end-to-end; the shell scripts under `scripts/` assume bash and `fswatch`/`inotifywait`, so on Windows you should run everything inside WSL.
+- **Hardware (any platform)**: ≥ 32 GB RAM recommended, 16 GB is the floor with reduced throughput. Apple Silicon uses unified memory; on discrete-GPU systems the Gemma 4 Q4_K_M weights (~16 GB) must fit in VRAM for full Metal/CUDA offload, otherwise llama.cpp falls back to shared CPU+GPU layers.
 - **Python 3.12+**, `python3 --version`
-- **Poppler** for PDF text extraction, `brew install poppler`
-- **[Obsidian](https://obsidian.md)**, optional but recommended for the graph view
+- **Poppler** for PDF text extraction:
+  - macOS: `brew install poppler`
+  - Linux (Debian/Ubuntu): `sudo apt install poppler-utils`
+  - Windows (WSL): same as Linux; or native: install [`poppler for Windows`](https://github.com/oschwartz10612/poppler-windows/releases) and put `bin/` on your `PATH`
+- **[Obsidian](https://obsidian.md)**, optional but recommended for the graph view (cross-platform)
 
 ### 1. Clone and download the model
 
 ```bash
-git clone https://github.com/DimitrisLianos/LLM_Wiki_SecondBrain.git
-cd LLM_Wiki_SecondBrain
+git clone <your-fork-or-upstream-url> llm-wiki
+cd llm-wiki
 
 mkdir -p models
 huggingface-cli download unsloth/gemma-4-26B-A4B-it-GGUF \
@@ -128,12 +137,22 @@ huggingface-cli download unsloth/gemma-4-26B-A4B-it-GGUF \
 git clone https://github.com/TheTom/llama-cpp-turboquant.git llama.cpp
 cd llama.cpp
 git checkout feature/turboquant-kv-cache
+
+# macOS (Apple Silicon, default): Metal GPU offload
 cmake -B build -DGGML_METAL=ON -DCMAKE_BUILD_TYPE=Release
+
+# Linux or WSL with NVIDIA GPU: swap the flag
+#   cmake -B build -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+# CPU-only fallback (any platform, slow but works):
+#   cmake -B build -DCMAKE_BUILD_TYPE=Release
+
 cmake --build build --config Release -j
 cd ..
 ```
 
-> **Why a fork?** TurboQuant KV cache compression ([paper](https://arxiv.org/abs/2504.19874)) is not yet merged into mainline llama.cpp. The [TheTom/llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork adds `turbo4` cache types with validated Metal / Apple Silicon support (M1-M5). Full rationale: [ADR-002](docs/arc42/09-architecture-decisions.md) and [ADR-004](docs/arc42/09-architecture-decisions.md).
+> **Why a fork?** TurboQuant KV cache compression ([paper](https://arxiv.org/abs/2504.19874)) is not yet merged into mainline llama.cpp. The [TheTom/llama-cpp-turboquant](https://github.com/TheTom/llama-cpp-turboquant) fork adds `turbo4` cache types with validated Metal / Apple Silicon support (M1-M5). CUDA builds share the same `turbo4` kernels; CPU-only builds fall back to `q8_0` on both K and V automatically. Full rationale: [ADR-002](docs/arc42/09-architecture-decisions.md) and [ADR-004](docs/arc42/09-architecture-decisions.md).
+>
+> **Thread count**: `scripts/start_server.sh` reads `sysctl -n hw.performancecores` on macOS and falls back to `8` elsewhere. On Linux or WSL, if you have significantly more or fewer performance cores than 8, edit `THREADS=` near the top of `start_server.sh` (or export `THREADS` before running the script, the variable is honoured if already set).
 
 ### 3. Start the server
 
@@ -165,6 +184,20 @@ python3 scripts/query.py -i # interactive mode
 python3 scripts/query.py -s "compare X and Y" # save answer as wiki page
 ```
 
+### 6. (optional) launch the web UI
+
+A FastAPI + Vite/Lit single-page app wraps every CLI operation behind an HTTP JSON API. Install the two runtime dependencies and run:
+
+```bash
+pip install 'fastapi[standard]' ddgs   # ddgs is optional web-search augmentation
+python3 web/api/app.py                 # serves http://127.0.0.1:3000 by default
+python3 web/api/app.py --dev           # auto-reload on code changes
+```
+
+The app binds to `127.0.0.1` only. The pre-built frontend bundle under `web/frontend/dist/` is served as static files; to work on the UI, run `npm install && npm run dev` inside `web/frontend/` for the Vite dev server on `:5173` (proxied to the API).
+
+For a panel-by-panel walkthrough with screenshots, Query, Search, Browse, Graph, Page viewer, Ingest, Health, Dedup, Server, and the near-term UI roadmap, see [`docs/UI.md`](docs/UI.md).
+
 ---
 
 ## Operations reference (short)
@@ -186,14 +219,18 @@ For the full ops reference including fallback configurations for 16 GB machines,
 | `python3 scripts/search.py --rebuild` | Rebuild the FTS5 search index |
 | `python3 scripts/lint.py` | Health-check the wiki graph |
 | `python3 scripts/cleanup_dedup.py` | Find and merge duplicate pages (dry run; use `--apply` to write) |
-| `bash scripts/watch.sh` | Auto-ingest new files dropped into `raw/` |
+| `bash scripts/watch.sh` | Auto-ingest new files dropped into `raw/` (needs `fswatch` on macOS or `inotify-tools` on Linux / WSL) |
 | `bash scripts/watch.sh --lint` | Auto-ingest + lint after each |
+| `python3 web/api/app.py` | Start the FastAPI web UI on `127.0.0.1:3000` |
+| `python3 web/api/app.py --dev` | Same, with auto-reload for frontend/backend development |
+
+> **Platform notes.** The shell scripts are bash and assume a Unix-like environment. They run natively on macOS and Linux, and work unchanged inside WSL 2 on Windows. On native Windows PowerShell you would need to invoke `llama-server` directly (the `start_server.sh` body is a single command line with flags; see the file). The Python entrypoints (`scripts/*.py`, `web/api/app.py`) are pure cross-platform. Thread count is auto-detected on macOS (`sysctl`) and defaults to 8 elsewhere, override by exporting `THREADS=<N>` before launching either server script.
 
 ### Supported file types
 
 | Type | Extension | Processing | Requires |
 |---|---|---|---|
-| PDF | `.pdf` | Text extracted via `pdftotext`, chunked by paragraphs | `brew install poppler` |
+| PDF | `.pdf` | Text extracted via `pdftotext`, chunked by paragraphs | macOS: `brew install poppler` · Linux/WSL: `sudo apt install poppler-utils` · Windows (native): [poppler-windows releases](https://github.com/oschwartz10612/poppler-windows/releases) |
 | Markdown | `.md` | Read as-is, chunked if large | - |
 | SMS backup XML | `.xml` | Parsed via `xml.etree.ElementTree` (XXE-safe) | - |
 | Plain text | `.txt` | Same as markdown | - |
@@ -209,7 +246,7 @@ SecondBrain_POC/
 ├── README.md # this landing page
 ├── CLAUDE.md # wiki schema, LLM instructions
 ├── LICENSE # MIT
-├── pyproject.toml # project metadata (zero runtime deps)
+├── pyproject.toml # project metadata (stdlib + 1 optional runtime dep: ddgs)
 ├── awake_mac.py # prevent Mac sleep via caffeinate
 │
 ├── docs/ # architecture documentation
@@ -233,7 +270,7 @@ SecondBrain_POC/
 │ ├── L2-container.md
 │ └── L3-component.md
 │
-├── scripts/
+├── scripts/ # CLI pipeline (stdlib-only)
 │ ├── llm_client.py # shared LLM client, paths, constants, safe_filename
 │ ├── search.py # FTS5 + wikilink graph + RRF retrieval
 │ ├── ingest.py # ingestion pipeline (write path)
@@ -247,6 +284,17 @@ SecondBrain_POC/
 │ ├── start_server.sh # generation server launcher
 │ ├── start_embed_server.sh # embedding server launcher (optional)
 │ └── watch.sh # filesystem watcher for auto-ingestion
+│
+├── web/ # optional web UI (FastAPI + Vite/Lit)
+│ ├── api/
+│ │ ├── app.py # FastAPI entrypoint, CSP + security headers
+│ │ ├── models.py # Pydantic request/response schemas
+│ │ ├── services.py # CLI-to-JSON adapter layer
+│ │ └── routers/ # ingest, query, search, wiki, lint, dedup, server, admin
+│ └── frontend/
+│ ├── src/ # Lit components, DOMPurify + Marked rendering
+│ ├── dist/ # built bundle (gitignored; re-built with `npm run build`)
+│ └── package.json # dompurify, lit, marked, vite
 │
 ├── obsidian_vault/ # the knowledge base
 │ ├── raw/ # source documents (immutable, gitignored)
@@ -266,6 +314,7 @@ SecondBrain_POC/
 │ ├── embed_cache.json # bge-m3 vectors (stage 5 cache)
 │ └── resolver_calibration.json # F1 threshold calibration data
 │
+├── logs/ # runtime server logs (gitignored)
 ├── models/ # GGUF weights (gitignored)
 └── llama.cpp/ # TurboQuant fork build (gitignored)
 ```
@@ -282,60 +331,66 @@ For the full troubleshooting table including memory-pressure fallbacks, the `tur
 |---|---|
 | "Cannot reach llama.cpp server" | `bash scripts/start_server.sh`, wait for `llama server listening` |
 | Server runs out of memory | Reduce `CONTEXT` to `32768` or `16384` in `scripts/start_server.sh`. See [arc42 § 7.4](docs/arc42/07-deployment-view.md). |
-| Ingest produces 0 entities / 0 concepts | Verify `--reasoning off`: `grep reasoning scripts/start_server.sh`. Full story: [Appendix A F-3](docs/arc42/appendix-a-academic-retrospective.md). |
+| Ingest produces 0 entities / 0 concepts | Reasoning mode must be `off` for ingestion. Either restart `scripts/start_server.sh` with `REASONING="off"` (line 36), or flip the toggle in the web UI header before ingesting. Full story: [Appendix A F-3](docs/arc42/appendix-a-academic-retrospective.md). |
 | HTTP 400 during ingest | Handled automatically, the pipeline auto-splits and retries up to 2 levels. See [arc42 § 6.5](docs/arc42/06-runtime-view.md). |
 | "unknown cache type turbo4" | You are on mainline llama.cpp instead of the TurboQuant fork. Re-clone step 2 of Quick Start. |
 | Quality degradation at inference | Do not use `turbo3` on Gemma 4 Q4_K_M (PPL > 100K). Use `turbo4` only. See [Appendix A F-5](docs/arc42/appendix-a-academic-retrospective.md). |
 | Obsidian doesn't show new pages | Filesystem watch delay, click a different folder and back, or reopen the vault. |
-| llama.cpp build fails | `xcode-select --install`, then rebuild. |
+| llama.cpp build fails (macOS) | `xcode-select --install`, then rebuild. |
+| llama.cpp build fails (Linux) | Install a C++ toolchain and CMake: `sudo apt install build-essential cmake`. For CUDA builds also install the matching CUDA toolkit. |
+| `watch.sh` exits with "no filesystem watcher found" | Install `fswatch` (macOS) or `inotify-tools` (Linux/WSL). On native Windows, run `watch.sh` from inside WSL. |
 
 ---
 
 ## Security and privacy posture
 
-This project is single-user, offline and local. The security and PII audit findings are documented in [arc42 § 11.1-11.2](docs/arc42/11-risks-and-technical-debt.md). The short version:
+This project is designed to run single-user, offline and local. The design properties below hold in the current tree:
 
-- **No outbound network.** `grep -R "https://" scripts/` returns only documentation comments. Verified.
+- **No outbound network.** `scripts/` contains no `urlopen`, `requests`, or `httpx` calls; the only HTTPS strings are documentation comments.
 - **Loopback-only server binding.** Both llama.cpp servers bind to `127.0.0.1` only.
 - **One-way `raw/`.** The pipeline reads from `raw/` and never writes to it. Enforced by convention and by [CLAUDE.md Rule 1](CLAUDE.md).
-- **Path-containment on all writes.** Every write under `wiki/` goes through `safe_filename()` in [`scripts/llm_client.py`](scripts/llm_client.py). See [arc42 § 11.1 SEC-2](docs/arc42/11-risks-and-technical-debt.md#111-security-posture).
-- **XXE-safe XML parsing.** Python's `xml.etree.ElementTree` does not expand external entities. See [arc42 § 11.1 SEC-3](docs/arc42/11-risks-and-technical-debt.md#111-security-posture).
-- **Four PII findings** (historical personal data in git history, documented in [arc42 § 11.2](docs/arc42/11-risks-and-technical-debt.md#112-pii-audit)).
+- **Path-containment on all writes.** Every write under `wiki/` goes through `safe_filename()` in [`scripts/llm_client.py`](scripts/llm_client.py), and web-API delete / save / page-fetch endpoints explicitly resolve + `relative_to` their wiki subdir so untrusted inputs cannot escape.
+- **XXE-safe XML parsing.** Python's `xml.etree.ElementTree` does not expand external entities by default.
+- **Parameterised SQL.** Every `cursor.execute` call in `scripts/search.py` uses `?` placeholders; column weights inside the query string are literal constants, not user input.
+- **List-form subprocess calls.** `pdftotext` and `pdfinfo` are invoked via `subprocess.run([...], shell=False)`, so shell metacharacters in filenames cannot reach a shell.
+- **Web UI hardening.** The FastAPI app ships a strict Content-Security-Policy (`script-src 'self'`, no inline scripts), `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `X-Content-Type-Options: nosniff`. All rendered markdown passes through DOMPurify with an explicit URI allowlist (`https?:`, `mailto:`, `tel:`, relative) before Lit inserts it via `unsafeHTML`.
+
+> **Not implemented, intentionally.** There is **no authentication and no rate limiting** on the FastAPI endpoints, this is a single-user, localhost-only tool. Binding to `0.0.0.0`, exposing the port over a LAN, or tunnelling it to the public internet turns every `/api/query/*`, `/api/ingest/*`, `/api/lint/delete`, and `/api/admin/reset` endpoint into an unauthenticated handle on your wiki and your local LLM. If you need to run across a LAN, put the app behind an authenticating reverse proxy (Caddy + basic auth, Tailscale Serve, etc.) and add per-IP rate limits on the LLM endpoints before doing so.
 
 Anything that would require a new outbound network edge, telemetry, crash reporters, update checks, cloud LLM fallback, is a breaking change to [Quality Goal Q1 (privacy)](docs/arc42/01-introduction-and-goals.md#12-quality-goals) and requires an ADR.
 
 ---
 
-## Honest retrospective
+## Design trade-offs
 
-The user's original brief asked for "what we did, what we did and failed, what we did and succeeded but didn't fit purpose", an academic-rigour retrospective rather than marketing copy. That retrospective lives in full in [**Appendix A, Academic Retrospective**](docs/arc42/appendix-a-academic-retrospective.md). Brief selection:
+An architecture-level retrospective covering what worked, what did not fit, and the labelled failure modes encountered during development lives in [**Appendix A, Academic Retrospective**](docs/arc42/appendix-a-academic-retrospective.md). Brief selection:
 
 **Worked and fit the purpose:**
 - Four-pillar integration (Karpathy + Gemma 4 + UD + TurboQuant)
-- FTS5 + graph + RRF retrieval, replaces an LLM-driven page selector that hit a scaling ceiling at ≈ 500 pages
-- Six-stage entity resolver with a canonical alias gazetteer, the fix for the cross-document proper-noun fork epidemic
+- FTS5 + graph + RRF retrieval, replacing an LLM-driven page selector that hit a scaling ceiling at ≈ 500 pages
+- Six-stage entity resolver with a canonical alias gazetteer, addressing cross-document proper-noun forks
 - Asymmetric `q8_0` K + `turbo4` V KV cache, ~3 GB reclaimed vs. symmetric Q8
-- Zero Python runtime dependencies, ~2 000 LOC of stdlib code against Python 3.12
-- Reverse-index idempotency via `source_files` table, replaces an O(N) directory scan
+- Stdlib-only core (ingest + query), ~2 000 LOC against Python 3.12; optional web UI and web-search augmentation are isolated extras
+- Reverse-index idempotency via `source_files` table, replacing an O(N) directory scan
 - Hard gates on the F1 threshold tuner, `MIN_SAMPLES=20`, `MIN_NEG=5`, `MIN_POS=5`
-- Consolidation of `safe_filename()` in `llm_client.py` after a duplicated-implementation incident
+- Consolidated `safe_filename()` and `find_existing_page()` helpers in `llm_client.py`
 
-**Succeeded but did not fit purpose (kept as opt-in, or dropped):**
-- bge-m3 stage-5 embedding cosine, kept as opt-in behind a flag
+**Succeeded but did not fit the default pipeline (kept opt-in, or dropped):**
+- bge-m3 stage-5 embedding cosine, kept opt-in behind a flag
 - Age-gap tiebreaker, gated behind `--use-embeddings`
-- Greek Snowball stemmer, dropped; Porter stemmer + stopwords covered the actual corpus
+- Greek Snowball stemmer, dropped; Porter stemmer + stopwords covered typical workloads
 - GraphRAG community summaries, dropped; found to underperform plain RAG on single-hop QA ([Han et al. 2025](https://arxiv.org/abs/2502.11371))
-- LLM page compression, dropped; quality not worth the cost
+- LLM page compression, dropped; quality drift not worth the cost
 
-**Failed outright, then fixed:**
+**Known failure modes, resolved:**
 - **F-1** LLM-based page selection scaling ceiling → replaced with FTS5 + graph + RRF
-- **F-2** F1 threshold degenerated on 51/1 imbalance → hard gates on sample counts
+- **F-2** F1 threshold degenerated on class-imbalanced calibration data → hard gates on sample counts
 - **F-3** Gemma 4 thinking tokens consumed output budget → `--reasoning off` at the server
-- **F-4** ChatGPT 5-way fork epidemic → canonical alias gazetteer at stage 0
+- **F-4** ChatGPT multi-way fork under similarity-only resolution → canonical alias gazetteer at stage 0
 - **F-5** `turbo3` caused PPL > 100K on Gemma 4 Q4_K_M → only `turbo4`, asymmetric
 - **F-6** *Aedes aegypti* fork from LLM type noise → narrowed the type-constraint stage
 
-Each failure has a full *symptom / root cause / mitigation / status / lesson* block in [Appendix A § A.4](docs/arc42/appendix-a-academic-retrospective.md#a4-what-we-did-and-failed-f-series).
+Each failure mode has a full *symptom / root cause / mitigation / status / lesson* block in [Appendix A § A.4](docs/arc42/appendix-a-academic-retrospective.md#a4-failed--the-f-series).
 
 ---
 

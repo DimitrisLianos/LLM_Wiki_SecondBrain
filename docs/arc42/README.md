@@ -1,4 +1,4 @@
-# LLM Wiki — arc42 Architecture Documentation
+# LLM Wiki, arc42 Architecture Documentation
 
 > This is the full architecture documentation for the LLM Wiki project, structured according to the [arc42 template](https://arc42.org/) (v8.2). The arc42 template is a pragmatic template for software architecture documentation, maintained by Gernot Starke and Peter Hruschka; it is de facto standard for architecture-level documentation in the German-speaking software engineering community and widely used internationally.
 >
@@ -22,9 +22,9 @@ Twelve numbered sections following the arc42 structure, plus one appendix:
 | [8](08-crosscutting-concepts.md) | **Cross-cutting Concepts** | Domain model, persistence, error handling, security posture, concurrency, prompt discipline, observability |
 | [9](09-architecture-decisions.md) | **Architecture Decisions** | Seven ADRs in Michael Nygard format: zero deps, fork llama.cpp, FTS5+graph over vector, asymmetric KV, six-stage resolver, F1 gates, reverse-index idempotency |
 | [10](10-quality-requirements.md) | **Quality Requirements** | Quality tree and 23 ISO/IEC 25010 quality scenarios (S/E/R/M format). Traceability to goals, ADRs and constraints. |
-| [11](11-risks-and-technical-debt.md) | **Risks and Technical Debt** | Security audit (7 findings), PII audit (4 findings), known limitations, technical debt register, risk register, scaling thought experiment |
+| [11](11-risks-and-technical-debt.md) | **Risks and Technical Debt** | Known limitations (L-1..L-7), technical debt register (TD-1..TD-9), risk register (R-1..R-10), scaling thought experiment |
 | [12](12-glossary.md) | **Glossary** | Alphabetical glossary of ~75 domain and technical terms |
-| [A](appendix-a-academic-retrospective.md) | **Appendix A, Academic Retrospective** | What we did, what we did and failed, what we did and succeeded but didn't fit purpose. Six labelled failures (F-1..F-6), five "succeeded but didn't fit" items (D-1..D-5), eight "succeeded and fits" items, five meta-lessons (M-1..M-5). |
+| [A](appendix-a-academic-retrospective.md) | **Appendix A, Academic Retrospective** | What was built, what failed, and what succeeded but didn't fit the purpose. Six labelled failures (F-1..F-6), five "succeeded but didn't fit" items (D-1..D-5), eight "succeeded and fits" items, five meta-lessons (M-1..M-5). |
 
 Each section is a single Markdown file in this folder. Every cross-reference uses a relative link and every anchor resolves.
 
@@ -34,7 +34,7 @@ Each section is a single Markdown file in this folder. Every cross-reference use
 
 Different readers want different things. Four orders cover most use cases:
 
-### Reading order A — The 20-minute overview
+### Reading order A, The 20-minute overview
 
 If you have 20 minutes, read in this order:
 
@@ -45,7 +45,7 @@ If you have 20 minutes, read in this order:
 
 You will understand *what* the system is, *why* the boundary is drawn where it is and *what in it was worth building*.
 
-### Reading order B — "Show me how it works"
+### Reading order B, "Show me how it works"
 
 If you want to understand the mechanics:
 
@@ -56,7 +56,7 @@ If you want to understand the mechanics:
 
 This is the C4-style tour, inside the arc42 framing.
 
-### Reading order C — "Why did you decide that?"
+### Reading order C, "Why did you decide that?"
 
 If you want the reasoning chain:
 
@@ -68,17 +68,17 @@ If you want the reasoning chain:
 
 Every ADR cites the quality goals it serves and the failures it prevents.
 
-### Reading order D — "What went wrong, and what did you do about it?"
+### Reading order D, "What went wrong, and what did you do about it?"
 
 The academic-retrospective reading order, for readers who want the honest story:
 
-1. [§ 11 (Risks and Technical Debt)](11-risks-and-technical-debt.md), security audit, PII audit, known limitations
+1. [§ 11 (Risks and Technical Debt)](11-risks-and-technical-debt.md), known limitations, technical debt, risk register
 2. [Appendix A § A.4 (Failures)](appendix-a-academic-retrospective.md), F-1 through F-6 with symptom / root cause / mitigation / status / lesson
 3. [Appendix A § A.3 (Succeeded but didn't fit)](appendix-a-academic-retrospective.md#a3-succeeded-but-did-not-fit-the-purpose), D-1 through D-5, the things that worked but didn't belong
 4. [Appendix A § A.5 (Meta-lessons)](appendix-a-academic-retrospective.md#a5-meta-lessons), five generalisations
-5. [Appendix A § A.6 (Regrets)](appendix-a-academic-retrospective.md#a6-what-would-be-different-next-time), five things we would do differently
+5. [Appendix A § A.6 (Revisions for a rebuild)](appendix-a-academic-retrospective.md#a6-what-would-be-different-next-time), five revisions a rebuild would adopt
 
-This is the reading order the user's original prompt asked for: *"what we did, what we did and failed, what we did and succeeded but didn't fit the purpose, with academic rigor."*
+This is the academic-retrospective reading order: *what was built, what failed, what succeeded but didn't fit the purpose, presented with academic rigor.*
 
 ---
 
@@ -125,7 +125,7 @@ Sections 1-4 set up the problem and the strategy. Sections 5-8 are the architect
 
 ---
 
-## C4 model — standalone documents
+## C4 model, standalone documents
 
 The C4 Level 1 / Level 2 / Level 3 diagrams appear inline in arc42 §§ 3 and 5. They are also available as standalone C4 documents for readers who prefer the C4 model's native presentation:
 
@@ -147,11 +147,9 @@ Throughout the arc42 documentation, the following notation is used consistently 
 | `TC-1`..`TC-8` | Technical constraints | TC-1 = Python stdlib only | [§ 2](02-architecture-constraints.md) |
 | `ADR-001`..`ADR-007` | Architecture decisions | ADR-001 = zero deps | [§ 9](09-architecture-decisions.md) |
 | `QS-1`..`QS-23` | Quality scenarios | QS-1 = "ingest 100 PDFs with no network" | [§ 10](10-quality-requirements.md) |
-| `SEC-1`..`SEC-7` | Security findings | SEC-2 = path-containment nuance | [§ 11.1](11-risks-and-technical-debt.md#111-security-posture) |
-| `PII-1`..`PII-4` | PII findings | PII-2 = Gmail in 2 commits | [§ 11.2](11-risks-and-technical-debt.md#112-pii-and-privacy-audit) |
-| `L-1`..`L-7` | Known limitations | L-1 = Greek-English mixed-lang retrieval | [§ 11.3](11-risks-and-technical-debt.md#113-known-limitations) |
-| `TD-1`..`TD-10` | Technical debt items | TD-3 = judge cache is not atomic-write | [§ 11.4](11-risks-and-technical-debt.md#114-technical-debt) |
-| `R-1`..`R-10` | Risk register entries | R-1 = model drift breaks resolver prompts | [§ 11.5](11-risks-and-technical-debt.md#115-risk-register) |
+| `L-1`..`L-7` | Known limitations | L-1 = no automated relevance evaluation | [§ 11.1](11-risks-and-technical-debt.md#111-known-limitations) |
+| `TD-1`..`TD-9` | Technical debt items | TD-8 = judge cache is not atomic-write | [§ 11.2](11-risks-and-technical-debt.md#112-technical-debt) |
+| `R-1`..`R-10` | Risk register entries | R-1 = TurboQuant fork becomes unmaintained | [§ 11.3](11-risks-and-technical-debt.md#113-risk-register) |
 | `F-1`..`F-6` | Labelled failures | F-1 = LLM-based page selection scaling ceiling | [Appendix A § A.4](appendix-a-academic-retrospective.md#a4-failed--the-f-series) |
 | `D-1`..`D-5` | "Succeeded but didn't fit" items | D-1 = bge-m3 stage 5 as opt-in | [Appendix A § A.3](appendix-a-academic-retrospective.md#a3-succeeded-but-did-not-fit-the-purpose) |
 | `M-1`..`M-5` | Meta-lessons | M-1 = fixed-size structures between LLM and corpus | [Appendix A § A.5](appendix-a-academic-retrospective.md#a5-meta-lessons) |
@@ -189,7 +187,7 @@ Link-check on every edit with a local script if one exists, or manually follow e
 
 ---
 
-## Quick navigation — one click per section
+## Quick navigation, one click per section
 
 - Section 1, [Introduction and Goals](01-introduction-and-goals.md)
 - Section 2, [Architecture Constraints](02-architecture-constraints.md)
